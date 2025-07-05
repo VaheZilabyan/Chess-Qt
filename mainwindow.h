@@ -12,7 +12,7 @@ public:
     ~MainWindow();
 
 private:
-    static constexpr int MIN_WIDTH = 700;
-    static constexpr int MIN_HEIGHT = 700;
+    static constexpr int MIN_WIDTH = 600;
+    static constexpr int MIN_HEIGHT = 600;
 };
 #endif // MAINWINDOW_H

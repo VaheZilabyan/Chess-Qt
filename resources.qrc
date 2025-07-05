@@ -13,4 +13,5 @@
         <file>images/white-queen.png</file>
         <file>images/white-rook.png</file>
     </qresource>
+    <qresource prefix="/svg"/>
 </RCC>

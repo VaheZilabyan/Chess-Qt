@@ -34,12 +34,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     QGraphicsScene *scene = new QGraphicsScene(this);
     graphicsView->setScene(scene);
-    mainLayout->addWidget(label1);
     mainLayout->addWidget(graphicsView);
-    mainLayout->addWidget(label2);
 
-    scene->setSceneRect(-20, -20, 690, 690); //
-    graphicsView->setFixedSize(700, 700); //
+    //scene->setSceneRect(-20, -20, 690, 690); //
+    //graphicsView->setFixedSize(700, 700); //
 
     Board *board = Board::getInstance();
     board->setupInitialPosition(scene);

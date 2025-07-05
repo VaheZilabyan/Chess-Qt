@@ -18,8 +18,8 @@ public:
     //void makeMove(Position from, Position to);
     // дополнительные функции: шах, мат, рокировка и т.д.
 
+    static constexpr int tileSize = 65;
 private:
-    static constexpr int tileSize = 80;
     static QVector<ChessPiece*> whitePieces;
     static QVector<ChessPiece*> blackPieces;
 };

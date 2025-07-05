@@ -15,36 +15,42 @@ void Board::setupInitialPosition(QGraphicsScene *scene)
     for (int row = 0; row < 8; ++row) {
         for (int col = 0; col < 8; ++col) {
             QColor color = (row + col) % 2 == 0 ? Qt::white : Qt::gray;
-            QGraphicsRectItem* square = scene->addRect(col * tileSize, row * tileSize, tileSize, tileSize, QPen(Qt::black), QBrush(color));
+            QGraphicsRectItem* square = scene->addRect(col * tileSize, row * tileSize, tileSize, tileSize, QPen(Qt::NoPen), QBrush(color));
             square->setData(0, row);
             square->setData(1, col);
         }
     }
+    QGraphicsRectItem *square = scene->addRect(0, 0, 8 * tileSize, 8 * tileSize, QPen(Qt::gray));
 
     int num = 97;
     for (int i = 0; i < 8; ++i) {
-        QGraphicsTextItem *text = scene->addText(QString(QChar(num++)), QFont("Arial", 9, QFont::Bold, true));
-        text->setPos(i * tileSize - 3, 7 * tileSize + tileSize/1.27);
+        QColor color = i % 2 == 0 ? Qt::white : Qt::darkGray;
+        QGraphicsTextItem *text = scene->addText(QString(QChar(num++)), QFont("Arial", 8, QFont::Bold, true));
+        text->setDefaultTextColor(color);
+        text->setPos(i * tileSize - 3, 7 * tileSize + tileSize / 1.35);
+
     }
     for (int i = 7; i >= 0; --i) {
-        QGraphicsTextItem *text = scene->addText(QString::number(8 - i), QFont("Arial", 9, QFont::Bold, true));
-        text->setPos(7 * tileSize + tileSize/1.2, i * tileSize);
+        QColor color = i % 2 == 0 ? Qt::white : Qt::darkGray;
+        QGraphicsTextItem *text = scene->addText(QString::number(8 - i), QFont("Arial", 8, QFont::Bold, true));
+        text->setDefaultTextColor(color);
+        text->setPos(7 * tileSize + tileSize/1.22, i * tileSize);
     }
 
     QMap<QString, QPixmap> pixmaps = {
-        {"wp", QPixmap(":/res/images/white-pawn.png").scaled(tileSize, tileSize)},
-        {"wr", QPixmap(":/res/images/white-rook.png").scaled(tileSize, tileSize)},
-        {"wn", QPixmap(":/res/images/white-knight.png").scaled(tileSize, tileSize)},
-        {"wb", QPixmap(":/res/images/white-bishop.png").scaled(tileSize, tileSize)},
-        {"wq", QPixmap(":/res/images/white-queen.png").scaled(tileSize, tileSize)},
-        {"wk", QPixmap(":/res/images/white-king.png").scaled(tileSize, tileSize)},
+        {"wp", QPixmap(":/res/images/white-pawn.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"wr", QPixmap(":/res/images/white-rook.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"wn", QPixmap(":/res/images/white-knight.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"wb", QPixmap(":/res/images/white-bishop.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"wq", QPixmap(":/res/images/white-queen.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"wk", QPixmap(":/res/images/white-king.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
 
-        {"bp", QPixmap(":/res/images/black-pawn.png").scaled(tileSize, tileSize)},
-        {"br", QPixmap(":/res/images/black-rook.png").scaled(tileSize, tileSize)},
-        {"bn", QPixmap(":/res/images/black-knight.png").scaled(tileSize, tileSize)},
-        {"bb", QPixmap(":/res/images/black-bishop.png").scaled(tileSize, tileSize)},
-        {"bq", QPixmap(":/res/images/black-queen.png").scaled(tileSize, tileSize)},
-        {"bk", QPixmap(":/res/images/black-king.png").scaled(tileSize, tileSize)},
+        {"bp", QPixmap(":/res/images/black-pawn.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"br", QPixmap(":/res/images/black-rook.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"bn", QPixmap(":/res/images/black-knight.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"bb", QPixmap(":/res/images/black-bishop.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"bq", QPixmap(":/res/images/black-queen.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
+        {"bk", QPixmap(":/res/images/black-king.png").scaled(tileSize, tileSize, Qt::KeepAspectRatio, Qt::SmoothTransformation)},
     };
 
     // Пешки

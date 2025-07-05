@@ -1,4 +1,5 @@
 #include "chesspiece.h"
+#include "board.h"
 
 #include <QDebug>
 #include <QPixmap>
@@ -72,23 +73,36 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     QPointF offset = event->scenePos() - dragStartPos;
-    setPos(pos() + offset);
+    QPointF newPos = pos() + offset;
+
+    // Размер доски и клетки
+    const int minX = 0;
+    const int minY = 0;
+    const int maxX = 7 * Board::tileSize;
+    const int maxY = 7 * Board::tileSize;
+
+    // Ограничиваем координаты
+    qreal clampedX = std::clamp(newPos.x(), qreal(minX), qreal(maxX));
+    qreal clampedY = std::clamp(newPos.y(), qreal(minY), qreal(maxY));
+
+    setPos(clampedX, clampedY);
     dragStartPos = event->scenePos();
     setSelectedState(false);
+
     QGraphicsPixmapItem::mouseMoveEvent(event);
 }
 
 void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     // Привязка к сетке доски (tileSize)
-    int x = int(event->scenePos().x()) / 80;
-    int y = int(event->scenePos().y()) / 80;
+    int x = int(event->scenePos().x()) / Board::tileSize;
+    int y = int(event->scenePos().y()) / Board::tileSize;
 
     x = std::clamp(x, 0, 7);
     y = std::clamp(y, 0, 7);
 
     // Оставляем фигуру по центру клетки
-    setPos(x * 80, y * 80);
+    setPos(x * Board::tileSize, y * Board::tileSize);
 
     setZValue(0);  // вернуть назад
 
