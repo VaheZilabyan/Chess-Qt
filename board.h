@@ -20,8 +20,8 @@ public:
 
     static constexpr int tileSize = 65;
 private:
-    static QVector<ChessPiece*> whitePieces;
-    static QVector<ChessPiece*> blackPieces;
+    static QVector<QGraphicsSvgItem*> whitePieces;
+    static QVector<QGraphicsSvgItem*> blackPieces;
 };
 
 #endif // BOARD_H

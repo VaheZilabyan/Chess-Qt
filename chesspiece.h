@@ -1,16 +1,16 @@
 #ifndef PIECE_H
 #define PIECE_H
 
-#include <QGraphicsPixmapItem>
+#include <QGraphicsSvgItem>
 #include <QGraphicsSceneMouseEvent>
 
-class ChessPiece : public QGraphicsPixmapItem {
+class ChessPiece : public QGraphicsSvgItem {
 public:
     enum PieceType { King, Queen, Rook, Bishop, Knight, Pawn };
     enum Color { White, Black };
 
     ChessPiece();
-    ChessPiece(PieceType type, Color color, QPixmap pixmap);
+    ChessPiece(PieceType type, Color color, const QString& svgPath);
 
     PieceType getType() const;
     Color getColor() const;
