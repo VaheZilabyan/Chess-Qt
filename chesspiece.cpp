@@ -38,23 +38,8 @@ void ChessPiece::setSelectedState(bool selected) {
 void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     Q_UNUSED(event);
 
-    // Unselect previous piece
-    if (selectedPiece && selectedPiece != this)
-        selectedPiece->setSelectedState(false);
-
-    // Toggle selection
-    if (selectedPiece == this) {
-        setSelectedState(false);
-        selectedPiece = nullptr;
-        Board::getInstance()->clearHints(); // debug this moment
-        qDebug() << "clicked again";
-    } else {
-        setSelectedState(true);
-        selectedPiece = this;
-    }
-
     dragStartPos = event->scenePos();
-    position = dragStartPos.toPoint();
+    //position = dragStartPos.toPoint();
     setZValue(1);  // Bring to front
 
     int cellSize = 64;  // размер одной клетки в пикселях (задай свой)
@@ -62,10 +47,23 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     int row = static_cast<int>(scenePos().y()) / cellSize;  // номер строки 0..7
     position.setX(col);
     position.setY(row);
-    //qDebug() << "Clicked cell: row =" << row << ", col =" << col;
 
-    QList<QPoint> moves = board->availableMoves(this);
+    QList<QPoint> moves = Board::getInstance()->availableMoves(this);
     Board::getInstance()->showHints(moves);
+
+    // Unselect previous piece
+    if (selectedPiece && selectedPiece != this) {
+        selectedPiece->setSelectedState(false);
+    }
+    // Toggle selection
+    if (selectedPiece == this) {
+        setSelectedState(false);
+        selectedPiece = nullptr;
+        Board::getInstance()->clearHints();
+    } else {
+        setSelectedState(true);
+        selectedPiece = this;
+    }
 
     QGraphicsSvgItem::mousePressEvent(event);
 }
@@ -92,11 +90,21 @@ void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
 
 void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+    Board::getInstance()->clearHints();
+
     int x = int(event->scenePos().x()) / Board::tileSize;
     int y = int(event->scenePos().y()) / Board::tileSize;
 
     x = std::clamp(x, 0, 7);
     y = std::clamp(y, 0, 7);
+
+    Q_ASSERT(Board::getInstance() != nullptr); //
+
+    // befor move must be checked
+    QPoint oldPos = getBoardPosition();
+    Board::getInstance()->removePiece(oldPos.x(), oldPos.y());     // ❗ старую позицию очистить
+    Board::getInstance()->movePiece(this, x, y);                  // ❗ поставить в новую
+    setBoardPosition(QPoint(x, y));                 // ❗ обновить свою позицию
 
     setPos(x * Board::tileSize, y * Board::tileSize);
     setZValue(0);

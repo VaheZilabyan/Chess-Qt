@@ -16,7 +16,7 @@ public:
     static Board* getInstance(QGraphicsScene *s = nullptr);
     void setupInitialPosition();
 
-    // ChessPiece* pieceAt(int x, int y) const;                     // узнать тип фигури в конкретнем поле
+    ChessPiece* pieceAt(int x, int y) const;                     // узнать тип фигури в конкретнем поле
     // bool isMoveValid(Position from, Position to);                // проверка хода
     // void makeMove(Position from, Position to);                   // setPos
 
@@ -27,11 +27,14 @@ public:
 
     bool isEmpty(int x, int y) const;
     bool isEnemy(int, int, ChessPiece::Color) const;
-    // дополнительные функции: шах, мат, рокировка и т.д.
+
+    void removePiece(int x, int y) { pieces[y][x] = nullptr; }
+
+    void movePiece(ChessPiece* piece, int x, int y) { pieces[y][x] = piece; }
 
     static constexpr int tileSize = 65;
 private:
-    ChessPiece *board[8][8] = {};
+    ChessPiece *pieces[8][8] = {};
     QGraphicsScene *scene = nullptr;
     QList<QGraphicsEllipseItem*> hintDots;
     QVector<ChessPiece*> whitePieces;

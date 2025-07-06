@@ -56,13 +56,18 @@ void Board::setupInitialPosition()
         wp->setPos(col * tileSize, 6 * tileSize);
         wp->setScale(tileSize / 128.0);  // подстройка масштаба
         scene->addItem(wp);
+        pieces[6][col] = wp;
         whitePieces.append(wp);  // если whitePieces теперь QVector<QGraphicsSvgItem*>
 
-        ChessPiece* bp = new ChessPiece(ChessPiece::Pawn, ChessPiece::White, svgPaths["bp"]);
+        ChessPiece* bp = new ChessPiece(ChessPiece::Pawn, ChessPiece::Black, svgPaths["bp"]);
         bp->setPos(col * tileSize, 1 * tileSize);
         bp->setScale(tileSize / 128.0);
         scene->addItem(bp);
+        pieces[1][col] = bp;
         blackPieces.append(bp);
+
+        wp->setBoardPosition(QPoint(col, 6));
+        bp->setBoardPosition(QPoint(col, 1));
     }
 
     // Расстановка других фигур по стандарту
@@ -80,13 +85,18 @@ void Board::setupInitialPosition()
         wPiece->setPos(col * tileSize, 7 * tileSize);
         wPiece->setScale(tileSize / 128.0);
         scene->addItem(wPiece);
+        pieces[7][col] = wPiece;
         whitePieces.append(wPiece);
 
-        ChessPiece* bPiece = new ChessPiece(order[col], ChessPiece::White, svgPaths[blackKeys[col]]);
+        ChessPiece* bPiece = new ChessPiece(order[col], ChessPiece::Black, svgPaths[blackKeys[col]]);
         bPiece->setPos(col * tileSize, 0 * tileSize);
         bPiece->setScale(tileSize / 128.0);
         scene->addItem(bPiece);
+        pieces[0][col] = bPiece;
         blackPieces.append(bPiece);
+
+        wPiece->setBoardPosition(QPoint(col, 7));
+        bPiece->setBoardPosition(QPoint(col, 0));
     }
 }
 
@@ -96,7 +106,6 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
     if (piece->getType() == ChessPiece::Pawn) {
         int dir = (piece->getColor() == ChessPiece::White) ? -1 : 1;
         QPoint pos = piece->getBoardPosition();  // например (4, 6)
-
         int x = pos.x();
         int y = pos.y() + dir;
 
@@ -121,16 +130,6 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
     return moves;
 }
 
-bool Board::isEmpty(int x, int y) const
-{
-    return true;
-}
-
-bool Board::isEnemy(int, int, ChessPiece::Color) const
-{
-    return false;
-}
-
 void Board::showHints(const QList<QPoint>& moves) {
     clearHints();
 
@@ -152,4 +151,25 @@ void Board::clearHints() {
         delete dot;
     }
     hintDots.clear();
+}
+
+ChessPiece *Board::pieceAt(int x, int y) const
+{
+    if (x < 0 || x >= 8 || y < 0 || y >= 8)
+        return nullptr;
+
+    return pieces[y][x]; // по стандарту y — строка, x — столбец
+}
+
+bool Board::isEmpty(int x, int y) const
+{
+    qDebug() << "Checking (" << x << "," << y << ") ->"
+             << (pieces[y][x] ? "Occupied" : "Empty");
+    if (pieceAt(x, y) == nullptr) return true;
+    return false;
+}
+
+bool Board::isEnemy(int, int, ChessPiece::Color) const
+{
+    return false;
 }
