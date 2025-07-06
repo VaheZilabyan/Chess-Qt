@@ -46,13 +46,26 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (selectedPiece == this) {
         setSelectedState(false);
         selectedPiece = nullptr;
+        Board::getInstance()->clearHints(); // debug this moment
+        qDebug() << "clicked again";
     } else {
         setSelectedState(true);
         selectedPiece = this;
     }
 
     dragStartPos = event->scenePos();
+    position = dragStartPos.toPoint();
     setZValue(1);  // Bring to front
+
+    int cellSize = 64;  // размер одной клетки в пикселях (задай свой)
+    int col = static_cast<int>(scenePos().x()) / cellSize;  // номер колонки 0..7
+    int row = static_cast<int>(scenePos().y()) / cellSize;  // номер строки 0..7
+    position.setX(col);
+    position.setY(row);
+    //qDebug() << "Clicked cell: row =" << row << ", col =" << col;
+
+    QList<QPoint> moves = board->availableMoves(this);
+    Board::getInstance()->showHints(moves);
 
     QGraphicsSvgItem::mousePressEvent(event);
 }

@@ -36,11 +36,11 @@ MainWindow::MainWindow(QWidget *parent)
     graphicsView->setScene(scene);
     mainLayout->addWidget(graphicsView);
 
-    //scene->setSceneRect(-20, -20, 690, 690); //
-    //graphicsView->setFixedSize(700, 700); //
+    scene->setSceneRect(-10, -10, 690, 690); //
+    graphicsView->setFixedSize(700, 700); // need to scene size == view size
 
-    Board *board = Board::getInstance();
-    board->setupInitialPosition(scene);
+    Board *board = Board::getInstance(scene);
+    board->setupInitialPosition();
 
     setCentralWidget(centralWidget);
 }

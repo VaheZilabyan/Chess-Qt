@@ -1,15 +1,12 @@
 #include "board.h"
 
-QVector<QGraphicsSvgItem*> Board::whitePieces = {};
-QVector<QGraphicsSvgItem*> Board::blackPieces = {};
-
-Board *Board::getInstance()
+Board *Board::getInstance(QGraphicsScene *s)
 {
-    static Board instance;
+    static Board instance(s);
     return &instance;
 }
 
-void Board::setupInitialPosition(QGraphicsScene *scene)
+void Board::setupInitialPosition()
 {
     // print Board
     for (int row = 0; row < 8; ++row) {
@@ -91,4 +88,68 @@ void Board::setupInitialPosition(QGraphicsScene *scene)
         scene->addItem(bPiece);
         blackPieces.append(bPiece);
     }
+}
+
+QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
+    QList<QPoint> moves;
+
+    if (piece->getType() == ChessPiece::Pawn) {
+        int dir = (piece->getColor() == ChessPiece::White) ? -1 : 1;
+        QPoint pos = piece->getBoardPosition();  // например (4, 6)
+
+        int x = pos.x();
+        int y = pos.y() + dir;
+
+        if (isEmpty(x, y)) {
+            moves.append(QPoint(x, y));
+            // если на начальной позиции — может идти на 2 клетки
+            if ((piece->getColor() == ChessPiece::White && pos.y() == 6) ||
+                (piece->getColor() == ChessPiece::Black && pos.y() == 1)) {
+                if (isEmpty(x, y + dir)) {
+                    moves.append(QPoint(x, y + dir));
+                }
+            }
+        }
+
+        // Удары по диагонали
+        for (int dx : {-1, 1}) {
+            if (isEnemy(x + dx, y, piece->getColor()))
+                moves.append(QPoint(x + dx, y));
+        }
+    }
+
+    return moves;
+}
+
+bool Board::isEmpty(int x, int y) const
+{
+    return true;
+}
+
+bool Board::isEnemy(int, int, ChessPiece::Color) const
+{
+    return false;
+}
+
+void Board::showHints(const QList<QPoint>& moves) {
+    clearHints();
+
+    for (const QPoint& pos : moves) {
+        QGraphicsEllipseItem* dot = scene->addEllipse(
+            pos.x() * tileSize + tileSize / 3,
+            pos.y() * tileSize + tileSize / 3,
+            tileSize / 3, tileSize / 3,
+            QPen(Qt::NoPen),
+            QBrush(QColor(50, 150, 255, 150))
+            );
+        hintDots.append(dot);
+    }
+}
+
+void Board::clearHints() {
+    for (auto dot : hintDots) {
+        scene->removeItem(dot);
+        delete dot;
+    }
+    hintDots.clear();
 }
