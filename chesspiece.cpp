@@ -97,7 +97,6 @@ void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     QGraphicsSvgItem::mouseMoveEvent(event);
 }
 
-
 void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     Board* board = Board::getInstance();
 
@@ -106,12 +105,6 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     int y = std::clamp(newPosInScene.y() / Board::tileSize, 0, 7);
     QPoint newBoardPos(x, y);
 
-    QList<QPoint> moves = board->availableMoves(this);
-    board->showHints(moves);  // show hints on click
-
-    bool canMove = moves.contains(newBoardPos);
-
-    //if (canMove) {
     if (Board::getInstance()->isMoveValid(getBoardPosition(), newBoardPos)) {
         qDebug() << "✅ Move is allowed";
 
