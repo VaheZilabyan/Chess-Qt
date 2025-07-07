@@ -161,6 +161,20 @@ ChessPiece *Board::pieceAt(int x, int y) const
     return pieces[y][x]; // по стандарту y — строка, x — столбец
 }
 
+bool Board::isMoveValid(QPoint from, QPoint to) const
+{
+    if (from.x() < 0 || from.x() >= 8 || from.y() < 0 || from.y() >= 8 ||
+        to.x() < 0 || to.x() >= 8 || to.y() < 0 || to.y() >= 8) {
+        return false;
+    }
+
+    ChessPiece* piece = pieces[from.y()][from.x()];
+    if (!piece) return false;
+
+    QList<QPoint> moves = availableMoves(piece);
+    return moves.contains(QPoint(to.x(), to.y()));
+}
+
 bool Board::isEmpty(int x, int y) const
 {
     //qDebug() << "Checking (" << x << "," << y << ") ->" << (pieces[y][x] ? "Occupied" : "Empty");

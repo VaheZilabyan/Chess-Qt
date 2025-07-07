@@ -18,7 +18,7 @@ public:
     void setupInitialPosition();
 
     ChessPiece* pieceAt(int x, int y) const;                     // узнать тип фигури в конкретнем поле
-    // bool isMoveValid(QPoint from, QPoint to) const;                // проверка хода
+    bool isMoveValid(QPoint from, QPoint to) const;                // проверка хода
     // void makeMove(QPoint from, QPoint to);                   // setPos
 
     // find and show aviable moves for cureent(clicked) piece

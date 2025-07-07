@@ -111,7 +111,8 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 
     bool canMove = moves.contains(newBoardPos);
 
-    if (canMove) {
+    //if (canMove) {
+    if (Board::getInstance()->isMoveValid(getBoardPosition(), newBoardPos)) {
         qDebug() << "✅ Move is allowed";
 
         board->removePiece(getBoardPosition().x(), getBoardPosition().y());     // Remove from old pos
