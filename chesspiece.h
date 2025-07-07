@@ -37,6 +37,7 @@ private:
     QPointF oldClickPosition;
 
     static ChessPiece* selectedPiece;
+    QList<QPoint> cachedMoves;
 
     Board *board;
 };

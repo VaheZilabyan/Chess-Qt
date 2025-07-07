@@ -33,12 +33,17 @@ public:
     void movePiece(ChessPiece* piece, int x, int y) { pieces[y][x] = piece; }
 
     static constexpr int tileSize = 65;
+
+private: //helper methods
+    bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
+
 private:
     ChessPiece *pieces[8][8] = {};
     QGraphicsScene *scene = nullptr;
     QList<QGraphicsEllipseItem*> hintDots;
     QVector<ChessPiece*> whitePieces;
     QVector<ChessPiece*> blackPieces;
+    bool hasMoved = false;
 };
 
 #endif // BOARD_H

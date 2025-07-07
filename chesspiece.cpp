@@ -57,8 +57,8 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     position.setY(row);*/
     position = toBoardCoord(event->scenePos()); //do the same
 
-    QList<QPoint> moves = Board::getInstance()->availableMoves(this);
-    Board::getInstance()->showHints(moves);
+    cachedMoves  = Board::getInstance()->availableMoves(this);
+    Board::getInstance()->showHints(cachedMoves );
 
     // Unselect previous piece
     if (selectedPiece && selectedPiece != this) {
@@ -105,15 +105,17 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     int y = std::clamp(newPosInScene.y() / Board::tileSize, 0, 7);
     QPoint newBoardPos(x, y);
 
-    if (Board::getInstance()->isMoveValid(getBoardPosition(), newBoardPos)) {
-        qDebug() << "✅ Move is allowed";
+
+    // if (Board::getInstance()->isMoveValid(getBoardPosition(), newBoardPos)) { //this way we call availableMoves twice
+    if (cachedMoves.contains(newBoardPos)) {
+        qDebug() << "Move is allowed";
 
         board->removePiece(getBoardPosition().x(), getBoardPosition().y());     // Remove from old pos
         board->movePiece(this, x, y);                                           // Register new position in the board array
         setBoardPosition(newBoardPos);                                          // Update internal state
         setPos(x * Board::tileSize, y * Board::tileSize);                       // Move visually
     } else {
-        qDebug() << "❌ Move not allowed, snapping back";
+        qDebug() << "Move not allowed, snapping back";
 
         QPoint oldBoardPos = getBoardPosition();
         setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
@@ -121,6 +123,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 
     setZValue(0);
     board->clearHints();
+    cachedMoves.clear();
 
     QGraphicsSvgItem::mouseReleaseEvent(event);
 }

@@ -102,8 +102,10 @@ void Board::setupInitialPosition()
 
 QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
     QList<QPoint> moves;
+    ChessPiece::PieceType pieceType = piece->getType();
 
-    if (piece->getType() == ChessPiece::Pawn) {
+    switch (pieceType) {
+    case ChessPiece::Pawn: {
         int dir = (piece->getColor() == ChessPiece::White) ? -1 : 1;
         QPoint pos = piece->getBoardPosition();  // например (4, 6)
         int x = pos.x();
@@ -119,12 +121,151 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
                 }
             }
         }
-
-        // Удары по диагонали
+        // Удары по диагонали   //implement after isEnemy method
         for (int dx : {-1, 1}) {
             if (isEnemy(x + dx, y, piece->getColor()))
                 moves.append(QPoint(x + dx, y));
         }
+        break;
+    }
+    case ChessPiece::Knight: {
+        static const QList<QPoint> knightMoves = {
+            {1, 2}, {2, 1}, {2, -1}, {1, -2},
+            {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}
+        };
+
+        QPoint pos = piece->getBoardPosition();
+        int x = pos.x();
+        int y = pos.y();
+
+        for (const QPoint& move : knightMoves) {
+            int nx = x + move.x();
+            int ny = y + move.y();
+
+            // Проверка границ доски    //isEnemy not impl yet
+            if (isInsideBoard(nx, ny)) {
+                if (isEmpty(nx, ny) || isEnemy(nx, ny, piece->getColor())) {
+                    moves.append(QPoint(nx, ny));
+                }
+            }
+        }
+        break;
+    }
+    case ChessPiece::Bishop: {
+        static const QList<QPoint> bishopDirs = {
+            {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
+        };
+
+        QPoint pos = piece->getBoardPosition();
+        int x0 = pos.x();
+        int y0 = pos.y();
+        ChessPiece::Color color = piece->getColor();
+
+        for (const QPoint& dir : bishopDirs) {
+            int x = x0 + dir.x();
+            int y = y0 + dir.y();
+
+            while (isInsideBoard(x, y)) {
+                if (isEmpty(x, y)) {
+                    moves.append(QPoint(x, y));
+                } else {
+                    if (isEnemy(x, y, color)) {
+                        moves.append(QPoint(x, y)); // можно побить
+                    }
+                    break; // путь прерван
+                }
+                x += dir.x();
+                y += dir.y();
+            }
+        }
+        break;
+    }
+    case ChessPiece::Rook: {
+        static const QList<QPoint> rookDirs = {
+            {1, 0}, {-1, 0}, {0, 1}, {0, -1}  // вправо, влево, вниз, вверх
+        };
+
+        QPoint pos = piece->getBoardPosition();
+        int x0 = pos.x();
+        int y0 = pos.y();
+        ChessPiece::Color color = piece->getColor();
+
+        for (const QPoint& dir : rookDirs) {
+            int x = x0 + dir.x();
+            int y = y0 + dir.y();
+
+            while (isInsideBoard(x, y)) {
+                if (isEmpty(x, y)) {
+                    moves.append(QPoint(x, y));
+                } else {
+                    if (isEnemy(x, y, color)) {
+                        moves.append(QPoint(x, y)); // можно побить
+                    }
+                    break; // путь прерван
+                }
+
+                x += dir.x();
+                y += dir.y();
+            }
+        }
+        break;
+    }
+    case ChessPiece::Queen: {
+        static const QList<QPoint> queenDirs = {
+            {1, 0}, {-1, 0}, {0, 1}, {0, -1},
+            {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
+        };
+
+        QPoint pos = piece->getBoardPosition();
+        int x0 = pos.x();
+        int y0 = pos.y();
+        ChessPiece::Color color = piece->getColor();
+
+        for (const QPoint& dir : queenDirs) {
+            int x = x0 + dir.x();
+            int y = y0 + dir.y();
+
+            while (isInsideBoard(x, y)) {
+                if (isEmpty(x, y)) {
+                    moves.append(QPoint(x, y));
+                } else {
+                    if (isEnemy(x, y, color)) {
+                        moves.append(QPoint(x, y)); // можно побить
+                    }
+                    break; // путь прерван
+                }
+
+                x += dir.x();
+                y += dir.y();
+            }
+        }
+        break;
+    }
+    case ChessPiece::King: {
+        static const QList<QPoint> kingDirs = {
+            {1, 0}, {-1, 0}, {0, 1}, {0, -1},
+            {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
+        };
+
+        QPoint pos = piece->getBoardPosition();
+        int x0 = pos.x();
+        int y0 = pos.y();
+        ChessPiece::Color color = piece->getColor();
+
+        for (const QPoint& dir : kingDirs) {
+            int x = x0 + dir.x();
+            int y = y0 + dir.y();
+
+            if (isInsideBoard(x, y)) {
+                if (isEmpty(x, y) || isEnemy(x, y, piece->getColor())) {
+                    moves.append(QPoint(x, y));
+                }
+            }
+        }
+        // castling add later
+
+        break;
+    }
     }
 
     return moves;
