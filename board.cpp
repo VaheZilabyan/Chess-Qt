@@ -1,10 +1,9 @@
 #include "board.h"
 
-Board *Board::getInstance(QGraphicsScene *s)
-{
-    static Board instance(s);
+/*Board* getInstance(QObject* parent = nullptr) {
+    static Board instance(parent);
     return &instance;
-}
+}*/
 
 void Board::setupInitialPosition()
 {
@@ -280,6 +279,10 @@ void Board::showHints(const QList<QPoint>& moves) {
             );
         hintDots.append(dot);
     }
+
+    for (auto a : killedBlackPieces) {
+        qDebug() << "type: " << a->getType() << " : color " << a->getColor();
+    }
 }
 
 void Board::clearHints() {
@@ -328,4 +331,24 @@ bool Board::isEnemy(int x, int y, ChessPiece::Color color) const
         return true;
     }
     return false;
+}
+
+void Board::capturePiece(int x, int y)
+{
+    ChessPiece* enemy = pieces[y][x];
+    if (!enemy) return;
+
+    if (enemy->getColor() == ChessPiece::White) {
+        killedWhitePieces.append(enemy);
+        //addToGraveyard(enemy, true);
+    } else {
+        killedBlackPieces.append(enemy);
+        //addToGraveyard(enemy, false);
+    }
+
+    scene->removeItem(enemy);
+    enemy->hide();
+    pieces[y][x] = nullptr;
+
+    emit pieceCaptured(enemy);  // ✅ отправляем сигнал
 }

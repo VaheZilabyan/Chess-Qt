@@ -20,6 +20,19 @@ ChessPiece::ChessPiece(PieceType type, Color color, const QString& svgPath)
     board = Board::getInstance();
 }
 
+ChessPiece::ChessPiece(const ChessPiece &other)
+    : QGraphicsSvgItem() // Call base class copy constructor (important!)
+{
+    this->type = other.type;
+    this->color = other.color;
+    this->dragStartPos = other.dragStartPos;
+    this->position = other.position;
+    this->oldClickPosition = other.oldClickPosition;
+    this->cachedMoves = other.cachedMoves;
+
+    this->board = other.board;  // Shallow copy: both pieces point to the same board
+}
+
 ChessPiece::PieceType ChessPiece::getType() const {
     return type;
 }

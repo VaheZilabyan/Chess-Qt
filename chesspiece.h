@@ -13,6 +13,7 @@ public:
 
     ChessPiece();
     ChessPiece(PieceType type, Color color, const QString& svgPath);
+    ChessPiece(const ChessPiece&);
 
     PieceType getType() const;
     Color getColor() const;
