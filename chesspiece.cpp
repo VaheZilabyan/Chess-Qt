@@ -17,6 +17,7 @@ ChessPiece::ChessPiece(PieceType type, Color color, const QString& svgPath)
     setAcceptHoverEvents(true);
     setZValue(1);
     setScale(Board::tileSize/ 128);
+    board = Board::getInstance();
 }
 
 ChessPiece::PieceType ChessPiece::getType() const {
@@ -35,18 +36,26 @@ void ChessPiece::setSelectedState(bool selected) {
     }
 }
 
+QPoint ChessPiece::toBoardCoord(QPointF scenePos)
+{
+    int x = static_cast<int>(scenePos.x()) / Board::tileSize;
+    int y = static_cast<int>(scenePos.y()) / Board::tileSize;
+    return QPoint(x, y);
+}
+
 void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     Q_UNUSED(event);
 
     dragStartPos = event->scenePos();
-    //position = dragStartPos.toPoint();
     setZValue(1);  // Bring to front
+    oldClickPosition = dragStartPos;
 
-    int cellSize = 64;  // размер одной клетки в пикселях (задай свой)
+    /*int cellSize = 64;  // размер одной клетки в пикселях (задай свой)
     int col = static_cast<int>(scenePos().x()) / cellSize;  // номер колонки 0..7
     int row = static_cast<int>(scenePos().y()) / cellSize;  // номер строки 0..7
     position.setX(col);
-    position.setY(row);
+    position.setY(row);*/
+    position = toBoardCoord(event->scenePos()); //do the same
 
     QList<QPoint> moves = Board::getInstance()->availableMoves(this);
     Board::getInstance()->showHints(moves);
@@ -59,7 +68,7 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (selectedPiece == this) {
         setSelectedState(false);
         selectedPiece = nullptr;
-        Board::getInstance()->clearHints();
+        //Board::getInstance()->clearHints();
     } else {
         setSelectedState(true);
         selectedPiece = this;
@@ -90,24 +99,34 @@ void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
 
 void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-    Board::getInstance()->clearHints();
+    Board* board = Board::getInstance();
 
-    int x = int(event->scenePos().x()) / Board::tileSize;
-    int y = int(event->scenePos().y()) / Board::tileSize;
+    QPoint newPosInScene = event->scenePos().toPoint();
+    int x = std::clamp(newPosInScene.x() / Board::tileSize, 0, 7);
+    int y = std::clamp(newPosInScene.y() / Board::tileSize, 0, 7);
+    QPoint newBoardPos(x, y);
 
-    x = std::clamp(x, 0, 7);
-    y = std::clamp(y, 0, 7);
+    QList<QPoint> moves = board->availableMoves(this);
+    board->showHints(moves);  // show hints on click
 
-    Q_ASSERT(Board::getInstance() != nullptr); //
+    bool canMove = moves.contains(newBoardPos);
 
-    // befor move must be checked
-    QPoint oldPos = getBoardPosition();
-    Board::getInstance()->removePiece(oldPos.x(), oldPos.y());     // ❗ старую позицию очистить
-    Board::getInstance()->movePiece(this, x, y);                  // ❗ поставить в новую
-    setBoardPosition(QPoint(x, y));                 // ❗ обновить свою позицию
+    if (canMove) {
+        qDebug() << "✅ Move is allowed";
 
-    setPos(x * Board::tileSize, y * Board::tileSize);
+        board->removePiece(getBoardPosition().x(), getBoardPosition().y());     // Remove from old pos
+        board->movePiece(this, x, y);                                           // Register new position in the board array
+        setBoardPosition(newBoardPos);                                          // Update internal state
+        setPos(x * Board::tileSize, y * Board::tileSize);                       // Move visually
+    } else {
+        qDebug() << "❌ Move not allowed, snapping back";
+
+        QPoint oldBoardPos = getBoardPosition();
+        setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
+    }
+
     setZValue(0);
+    board->clearHints();
 
     QGraphicsSvgItem::mouseReleaseEvent(event);
 }

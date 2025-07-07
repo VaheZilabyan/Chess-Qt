@@ -163,8 +163,7 @@ ChessPiece *Board::pieceAt(int x, int y) const
 
 bool Board::isEmpty(int x, int y) const
 {
-    qDebug() << "Checking (" << x << "," << y << ") ->"
-             << (pieces[y][x] ? "Occupied" : "Empty");
+    //qDebug() << "Checking (" << x << "," << y << ") ->" << (pieces[y][x] ? "Occupied" : "Empty");
     if (pieceAt(x, y) == nullptr) return true;
     return false;
 }

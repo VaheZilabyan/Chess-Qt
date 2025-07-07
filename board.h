@@ -5,7 +5,8 @@
 
 #include <QGraphicsScene>
 
-class Board {   // Singleton class
+// Singleton class
+class Board {
     Board(QGraphicsScene *s) {
         this->scene = s;
     }
@@ -17,8 +18,8 @@ public:
     void setupInitialPosition();
 
     ChessPiece* pieceAt(int x, int y) const;                     // узнать тип фигури в конкретнем поле
-    // bool isMoveValid(Position from, Position to);                // проверка хода
-    // void makeMove(Position from, Position to);                   // setPos
+    // bool isMoveValid(QPoint from, QPoint to) const;                // проверка хода
+    // void makeMove(QPoint from, QPoint to);                   // setPos
 
     // find and show aviable moves for cureent(clicked) piece
     QList<QPoint> availableMoves(ChessPiece* piece) const;       // return all aviable moves
@@ -29,7 +30,6 @@ public:
     bool isEnemy(int, int, ChessPiece::Color) const;
 
     void removePiece(int x, int y) { pieces[y][x] = nullptr; }
-
     void movePiece(ChessPiece* piece, int x, int y) { pieces[y][x] = piece; }
 
     static constexpr int tileSize = 65;

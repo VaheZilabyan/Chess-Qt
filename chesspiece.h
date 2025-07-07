@@ -26,12 +26,18 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
 
+    QPoint toBoardCoord(QPointF scenePos);
+
 private:
     PieceType type;
     Color color;
+
     QPointF dragStartPos;
-    static ChessPiece* selectedPiece;
     QPoint position;
+    QPointF oldClickPosition;
+
+    static ChessPiece* selectedPiece;
+
     Board *board;
 };
 
