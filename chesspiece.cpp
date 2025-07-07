@@ -110,16 +110,24 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     if (cachedMoves.contains(newBoardPos)) {
         qDebug() << "Move is allowed";
 
-        board->removePiece(getBoardPosition().x(), getBoardPosition().y());     // Remove from old pos
-        board->movePiece(this, x, y);                                           // Register new position in the board array
-        setBoardPosition(newBoardPos);                                          // Update internal state
-        setPos(x * Board::tileSize, y * Board::tileSize);                       // Move visually
+        // Попытка захвата вражеской фигуры
+        if (board->isEnemy(x, y, this->getColor())) {
+            board->capturePiece(x, y);  // 👈 Удаляет и заносит в список убитых
+        }
+
+        // Обновляем положение фигуры
+        board->removePiece(getBoardPosition().x(), getBoardPosition().y());  // Удаляем со старой позиции
+        board->movePiece(this, x, y);                                        // Регистрируем новую
+        setBoardPosition(newBoardPos);                                       // Обновляем внутреннюю позицию
+        setPos(x * Board::tileSize, y * Board::tileSize);                    // Перемещаем визуально
     } else {
         qDebug() << "Move not allowed, snapping back";
 
+        // Возврат в старую позицию
         QPoint oldBoardPos = getBoardPosition();
         setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
     }
+
 
     setZValue(0);
     board->clearHints();

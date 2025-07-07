@@ -29,20 +29,47 @@ public:
     bool isEmpty(int x, int y) const;
     bool isEnemy(int, int, ChessPiece::Color) const;
 
-    void removePiece(int x, int y) { pieces[y][x] = nullptr; }
+    void removePiece(int x, int y) {
+        ChessPiece* enemy = pieces[y][x];  // ✅ сохранить указатель до обнуления
+        if (!enemy)
+            return;
+
+        if (enemy->getColor() == ChessPiece::White)
+            killedWhitePieces.append(enemy);
+        else
+            killedBlackPieces.append(enemy);
+
+        pieces[y][x] = nullptr;  // 🔄 после
+    }
+    void capturePiece(int x, int y) {
+        ChessPiece* enemy = pieces[y][x];
+        if (!enemy) return;
+
+        if (enemy->getColor() == ChessPiece::White)
+            killedWhitePieces.append(enemy);
+        else
+            killedBlackPieces.append(enemy);
+
+        scene->removeItem(enemy);
+        enemy->hide();
+        pieces[y][x] = nullptr;
+    }
+
+
     void movePiece(ChessPiece* piece, int x, int y) { pieces[y][x] = piece; }
 
     static constexpr int tileSize = 65;
+
+    QGraphicsScene *scene = nullptr;
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
 
 private:
     ChessPiece *pieces[8][8] = {};
-    QGraphicsScene *scene = nullptr;
     QList<QGraphicsEllipseItem*> hintDots;
-    QVector<ChessPiece*> whitePieces;
-    QVector<ChessPiece*> blackPieces;
+    mutable QVector<ChessPiece*> killedWhitePieces;
+    mutable QVector<ChessPiece*> killedBlackPieces;
     bool hasMoved = false;
 };
 

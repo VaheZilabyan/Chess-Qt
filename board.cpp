@@ -57,14 +57,12 @@ void Board::setupInitialPosition()
         wp->setScale(tileSize / 128.0);  // подстройка масштаба
         scene->addItem(wp);
         pieces[6][col] = wp;
-        whitePieces.append(wp);  // если whitePieces теперь QVector<QGraphicsSvgItem*>
 
         ChessPiece* bp = new ChessPiece(ChessPiece::Pawn, ChessPiece::Black, svgPaths["bp"]);
         bp->setPos(col * tileSize, 1 * tileSize);
         bp->setScale(tileSize / 128.0);
         scene->addItem(bp);
         pieces[1][col] = bp;
-        blackPieces.append(bp);
 
         wp->setBoardPosition(QPoint(col, 6));
         bp->setBoardPosition(QPoint(col, 1));
@@ -86,14 +84,12 @@ void Board::setupInitialPosition()
         wPiece->setScale(tileSize / 128.0);
         scene->addItem(wPiece);
         pieces[7][col] = wPiece;
-        whitePieces.append(wPiece);
 
         ChessPiece* bPiece = new ChessPiece(order[col], ChessPiece::Black, svgPaths[blackKeys[col]]);
         bPiece->setPos(col * tileSize, 0 * tileSize);
         bPiece->setScale(tileSize / 128.0);
         scene->addItem(bPiece);
         pieces[0][col] = bPiece;
-        blackPieces.append(bPiece);
 
         wPiece->setBoardPosition(QPoint(col, 7));
         bPiece->setBoardPosition(QPoint(col, 0));
@@ -296,8 +292,10 @@ void Board::clearHints() {
 
 ChessPiece *Board::pieceAt(int x, int y) const
 {
-    if (x < 0 || x >= 8 || y < 0 || y >= 8)
+    if (x < 0 || x >= 8 || y < 0 || y >= 8) {
+        qDebug() << "not in inside border";
         return nullptr;
+    }
 
     return pieces[y][x]; // по стандарту y — строка, x — столбец
 }
@@ -323,7 +321,11 @@ bool Board::isEmpty(int x, int y) const
     return false;
 }
 
-bool Board::isEnemy(int, int, ChessPiece::Color) const
+bool Board::isEnemy(int x, int y, ChessPiece::Color color) const
 {
+    ChessPiece *enemy = pieceAt(x, y);
+    if (isInsideBoard(x, y) && enemy && enemy->getColor() != color) {
+        return true;
+    }
     return false;
 }
