@@ -17,6 +17,8 @@ public:
 
     PieceType getType() const;
     Color getColor() const;
+    QString getSvgPath() const { return svgPath; }
+
     void setSelectedState(bool selected);
 
     QPoint getBoardPosition() const { return position; }
@@ -32,6 +34,7 @@ protected:
 private:
     PieceType type;
     Color color;
+    QString svgPath;
 
     QPointF dragStartPos;
     QPoint position;

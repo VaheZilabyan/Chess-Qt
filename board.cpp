@@ -279,10 +279,6 @@ void Board::showHints(const QList<QPoint>& moves) {
             );
         hintDots.append(dot);
     }
-
-    for (auto a : killedBlackPieces) {
-        qDebug() << "type: " << a->getType() << " : color " << a->getColor();
-    }
 }
 
 void Board::clearHints() {
@@ -346,9 +342,22 @@ void Board::capturePiece(int x, int y)
         //addToGraveyard(enemy, false);
     }
 
+    emit pieceCaptured(enemy);
+
     scene->removeItem(enemy);
     enemy->hide();
     pieces[y][x] = nullptr;
 
-    emit pieceCaptured(enemy);  // ✅ отправляем сигнал
+}
+
+bool Board::isCorrectTurn(ChessPiece* piece) const {
+    return piece && piece->getColor() == currentTurn;
+}
+
+void Board::endTurn() {
+    currentTurn = (currentTurn == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
+}
+
+void Board::switchTurn() {
+    currentTurn = (currentTurn == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
 }

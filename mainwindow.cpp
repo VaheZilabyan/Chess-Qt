@@ -33,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent)
     graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    QGraphicsScene *scene = new QGraphicsScene(this);
+    scene = new QGraphicsScene(this);
     graphicsView->setScene(scene);
     mainLayout->addWidget(graphicsView);
 
@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
     Board *board = Board::getInstance();
     board->setScene(scene);
     board->setupInitialPosition();
-    setLayout(mainLayout);
+    //bsetLayout(mainLayout);
     setCentralWidget(centralWidget);
 
     connect(board, &Board::pieceCaptured, this, &MainWindow::onPieceCaptured);
@@ -76,23 +76,27 @@ MainWindow::~MainWindow() {}
 void MainWindow::onPieceCaptured(ChessPiece* piece) {
     if (!piece) return;
 
-    QGraphicsScene* graveScene = (piece->getColor() == ChessPiece::White) ? whiteGraveScene : blackGraveScene;
+    QGraphicsScene* graveScene = (piece->getColor() == ChessPiece::White)
+                                     ? whiteGraveScene : blackGraveScene;
     if (!graveScene) return;
 
-    // Удалить с игровой сцены
-    Board::getInstance()->getScene()->removeItem(piece);
-    piece->setVisible(true);
+    piece->hide();
 
-    // Посчитать позицию: 4 фигуры в ряд
+    ChessPiece* copy = new ChessPiece(piece->getType(), piece->getColor(), piece->getSvgPath());
+
     int index = graveScene->items().size();
     int row = index / 4;
     int col = index % 4;
 
     int tile = Board::tileSize;
-    piece->setScale((tile * 0.6) / 128.0);
-    piece->setPos(col * 40, row * 35);  // немного сжатие между фигурами
+    copy->setScale((tile * 0.6) / 128.0);
+    copy->setPos(col * 40, row * 35);
 
-    graveScene->addItem(piece);
+    graveScene->addItem(copy);
 }
+
+
+
+
 
 

@@ -42,6 +42,12 @@ public:
 
     static constexpr int tileSize = 65;
 
+    ChessPiece::Color currentTurn = ChessPiece::White;
+
+    bool isCorrectTurn(ChessPiece* piece) const;
+    void endTurn();
+    void switchTurn();
+
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
 

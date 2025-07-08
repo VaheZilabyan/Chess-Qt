@@ -10,7 +10,7 @@
 ChessPiece* ChessPiece::selectedPiece = nullptr;
 
 ChessPiece::ChessPiece(PieceType type, Color color, const QString& svgPath)
-    : QGraphicsSvgItem(svgPath), type(type), color(color)
+    : QGraphicsSvgItem(svgPath), type(type), color(color), svgPath(svgPath)
 {
     setFlags(ItemIsMovable | ItemIsSelectable | ItemSendsGeometryChanges);
     setAcceptedMouseButtons(Qt::LeftButton);
@@ -70,6 +70,13 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     position.setY(row);*/
     position = toBoardCoord(event->scenePos()); //do the same
 
+    if (!Board::getInstance()->isCorrectTurn(this)) {
+        // ❗ Снять выделение, если очередь не твоя
+        setSelectedState(false);
+        selectedPiece = nullptr;
+        return;
+    }
+
     cachedMoves  = Board::getInstance()->availableMoves(this);
     Board::getInstance()->showHints(cachedMoves );
 
@@ -81,7 +88,7 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (selectedPiece == this) {
         setSelectedState(false);
         selectedPiece = nullptr;
-        //Board::getInstance()->clearHints();
+        Board::getInstance()->clearHints();
     } else {
         setSelectedState(true);
         selectedPiece = this;
@@ -92,6 +99,14 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 
 
 void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+
+    if (!Board::getInstance()->isCorrectTurn(this)) {
+        // ❗ Снять выделение, если очередь не твоя
+        setSelectedState(false);
+        selectedPiece = nullptr;
+        return;
+    }
+
     QPointF offset = event->scenePos() - dragStartPos;
     QPointF newPos = pos() + offset;
 
@@ -113,6 +128,15 @@ void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     Board* board = Board::getInstance();
 
+    if (!board->isCorrectTurn(this)) {
+        qDebug() << "Not your turn!";
+        // Откат назад
+        QPoint oldBoardPos = getBoardPosition();
+        setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
+        return;
+    }
+
+
     QPoint newPosInScene = event->scenePos().toPoint();
     int x = std::clamp(newPosInScene.x() / Board::tileSize, 0, 7);
     int y = std::clamp(newPosInScene.y() / Board::tileSize, 0, 7);
@@ -122,6 +146,9 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     // if (Board::getInstance()->isMoveValid(getBoardPosition(), newBoardPos)) { //this way we call availableMoves twice
     if (cachedMoves.contains(newBoardPos)) {
         qDebug() << "Move is allowed";
+        if (newBoardPos.y() == 0) {
+            qDebug() << "become Queen";
+        }
 
         // Попытка захвата вражеской фигуры
         if (board->isEnemy(x, y, this->getColor())) {
@@ -133,6 +160,9 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         board->movePiece(this, x, y);                                        // Регистрируем новую
         setBoardPosition(newBoardPos);                                       // Обновляем внутреннюю позицию
         setPos(x * Board::tileSize, y * Board::tileSize);                    // Перемещаем визуально
+
+        Board::getInstance()->endTurn();
+        //Board::getInstance()->switchTurn();
     } else {
         qDebug() << "Move not allowed, snapping back";
 
@@ -145,6 +175,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     setZValue(0);
     board->clearHints();
     cachedMoves.clear();
+
 
     QGraphicsSvgItem::mouseReleaseEvent(event);
 }
