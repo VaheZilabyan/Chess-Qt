@@ -354,10 +354,46 @@ bool Board::isCorrectTurn(ChessPiece* piece) const {
     return piece && piece->getColor() == currentTurn;
 }
 
-void Board::endTurn() {
-    currentTurn = (currentTurn == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
-}
-
 void Board::switchTurn() {
     currentTurn = (currentTurn == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
 }
+
+void Board::placePiece(ChessPiece* piece, int x, int y) {
+    pieces[y][x] = piece;
+    piece->setBoardPosition(QPoint(x, y));
+}
+
+void Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color, int x, int y) {
+    /*ChessPiece* pawn = pieceAt(x, y);
+    if (!pawn) {
+        qWarning() << "❌ No piece at" << x << y;
+        return;
+    }
+
+    // Удалить старую пешку
+    scene->removeItem(pawn);
+    pawn->hide();
+    removePiece(x, y);
+    delete pawn;*/
+
+    // Заменить новой фигурой
+    QString svgPath;
+    if (color == ChessPiece::White) {
+        if (newType == ChessPiece::Queen)  svgPath = ":/svg_files/img/queen-w.svg";
+        if (newType == ChessPiece::Rook)   svgPath = ":/svg_files/img/rook-w.svg";
+        if (newType == ChessPiece::Bishop) svgPath = ":/svg_files/img/bishop-w.svg";
+        if (newType == ChessPiece::Knight) svgPath = ":/svg_files/img/knight-w.svg";
+    } else {
+        if (newType == ChessPiece::Queen)  svgPath = ":/svg_files/img/queen-b.svg";
+        if (newType == ChessPiece::Rook)   svgPath = ":/svg_files/img/rook-b.svg";
+        if (newType == ChessPiece::Bishop) svgPath = ":/svg_files/img/bishop-b.svg";
+        if (newType == ChessPiece::Knight) svgPath = ":/svg_files/img/knight-b.svg";
+    }
+
+    ChessPiece* promoted = new ChessPiece(newType, color, svgPath);
+    promoted->setPos(x * tileSize, y * tileSize);
+    promoted->setScale(tileSize / 128.0);
+    scene->addItem(promoted);
+    placePiece(promoted, x, y);
+}
+

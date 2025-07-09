@@ -1,3 +1,4 @@
+#include "promotiondialog.h"
 #include "chesspiece.h"
 #include "board.h"
 
@@ -136,7 +137,6 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         return;
     }
 
-
     QPoint newPosInScene = event->scenePos().toPoint();
     int x = std::clamp(newPosInScene.x() / Board::tileSize, 0, 7);
     int y = std::clamp(newPosInScene.y() / Board::tileSize, 0, 7);
@@ -146,8 +146,41 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     // if (Board::getInstance()->isMoveValid(getBoardPosition(), newBoardPos)) { //this way we call availableMoves twice
     if (cachedMoves.contains(newBoardPos)) {
         qDebug() << "Move is allowed";
-        if (newBoardPos.y() == 0) {
-            qDebug() << "become Queen";
+
+        // Pawn Promotion
+        if (type == PieceType::Pawn) {
+            int finalRank = (getColor() == ChessPiece::White) ? 0 : 7;
+            if (newBoardPos.y() == finalRank) {
+                qDebug() << "become Queen";
+                Color color = getColor();
+                PromotionDialog dialog(color);
+                if (dialog.exec() == QDialog::Accepted) {
+                    ChessPiece::PieceType promotedType = dialog.getSelectedPieceType();
+                    qDebug() << "pawn become to " << promotedType;
+
+                    // ❗ Удаляем пешку и создаём новую фигуру
+                    ChessPiece* pawn = board->pieceAt(position.x(), position.y());
+                    if (!pawn) {
+                        qWarning() << "❌ No piece at" << x << y;
+                        return;
+                    }
+
+                    // Удалить старую пешку
+                    board->getScene()->removeItem(pawn);
+                    pawn->hide();
+                    board->removePiece(position.x(), position.y());
+                    //delete pawn;
+
+                    board->capturePiece(x, y);
+                    board->pawnPromotion(promotedType, color, x, finalRank);
+
+                    board->switchTurn();  // передаём ход сразу
+                    board->clearHints();
+                    cachedMoves.clear();
+                    setZValue(0);
+                    return;  // ❗ Никаких дальнейших действий
+                }
+            }
         }
 
         // Попытка захвата вражеской фигуры
@@ -161,8 +194,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         setBoardPosition(newBoardPos);                                       // Обновляем внутреннюю позицию
         setPos(x * Board::tileSize, y * Board::tileSize);                    // Перемещаем визуально
 
-        Board::getInstance()->endTurn();
-        //Board::getInstance()->switchTurn();
+        Board::getInstance()->switchTurn();
     } else {
         qDebug() << "Move not allowed, snapping back";
 

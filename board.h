@@ -35,7 +35,8 @@ public:
 
     void removePiece(int x, int y) { pieces[y][x] = nullptr; }
     void capturePiece(int x, int y);
-    void movePiece(ChessPiece* piece, int x, int y) { pieces[y][x] = piece; }    
+    void movePiece(ChessPiece* piece, int x, int y) { pieces[y][x] = piece; }
+    void placePiece(ChessPiece* piece, int x, int y);
 
     void setScene(QGraphicsScene *s) { this->scene = s; }
     QGraphicsScene* getScene() { return scene; }
@@ -45,8 +46,9 @@ public:
     ChessPiece::Color currentTurn = ChessPiece::White;
 
     bool isCorrectTurn(ChessPiece* piece) const;
-    void endTurn();
     void switchTurn();
+
+    void pawnPromotion(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y);
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }

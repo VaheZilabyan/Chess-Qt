@@ -65,7 +65,6 @@ MainWindow::MainWindow(QWidget *parent)
     Board *board = Board::getInstance();
     board->setScene(scene);
     board->setupInitialPosition();
-    //bsetLayout(mainLayout);
     setCentralWidget(centralWidget);
 
     connect(board, &Board::pieceCaptured, this, &MainWindow::onPieceCaptured);
