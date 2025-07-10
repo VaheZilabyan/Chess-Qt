@@ -13,7 +13,6 @@ public:
 
     ChessPiece();
     ChessPiece(PieceType type, Color color, const QString& svgPath);
-    ChessPiece(const ChessPiece&);
 
     PieceType getType() const;
     Color getColor() const;
@@ -21,9 +20,8 @@ public:
 
     void setSelectedState(bool selected);
 
-    QPoint getBoardPosition() const { return position; }
-    void setBoardPosition(const QPoint& pos) { position = pos; }
-    void setDragStartPos(const QPointF& pos) { dragStartPos = pos; }
+    QPoint getPositionFromBoard() const { return position; }
+    void setPositionOnTheBoard(const QPoint& pos) { position = pos; }
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

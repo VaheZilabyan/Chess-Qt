@@ -63,8 +63,8 @@ void Board::setupInitialPosition()
         scene->addItem(bp);
         pieces[1][col] = bp;
 
-        wp->setBoardPosition(QPoint(col, 6));
-        bp->setBoardPosition(QPoint(col, 1));
+        wp->setPositionOnTheBoard(QPoint(col, 6));
+        bp->setPositionOnTheBoard(QPoint(col, 1));
     }
 
     // Расстановка других фигур по стандарту
@@ -90,8 +90,8 @@ void Board::setupInitialPosition()
         scene->addItem(bPiece);
         pieces[0][col] = bPiece;
 
-        wPiece->setBoardPosition(QPoint(col, 7));
-        bPiece->setBoardPosition(QPoint(col, 0));
+        wPiece->setPositionOnTheBoard(QPoint(col, 7));
+        bPiece->setPositionOnTheBoard(QPoint(col, 0));
     }
 }
 
@@ -102,7 +102,7 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
     switch (pieceType) {
     case ChessPiece::Pawn: {
         int dir = (piece->getColor() == ChessPiece::White) ? -1 : 1;
-        QPoint pos = piece->getBoardPosition();  // например (4, 6)
+        QPoint pos = piece->getPositionFromBoard();  // например (4, 6)
         int x = pos.x();
         int y = pos.y() + dir;
 
@@ -118,8 +118,22 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
         }
         // Удары по диагонали   //implement after isEnemy method
         for (int dx : {-1, 1}) {
-            if (isEnemy(x + dx, y, piece->getColor()))
-                moves.append(QPoint(x + dx, y));
+            int targetX = x + dx;
+            int targetY = y;
+
+            if (isEnemy(targetX, targetY, piece->getColor())) {
+                moves.append(QPoint(targetX, targetY));
+            }
+        }
+
+        // ВЗЯТИЕ НА ПРОХОДЕ
+        QPoint enPassantTarget = getEnPassantTarget();
+        for (int dx : {-1, 1}) {
+            int adjX = pos.x() + dx;
+            int targetY = pos.y() + dir;
+            if (QPoint(adjX, targetY) == enPassantTarget) {
+                moves.append(enPassantTarget);
+            }
         }
         break;
     }
@@ -129,7 +143,7 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
             {-1, -2}, {-2, -1}, {-2, 1}, {-1, 2}
         };
 
-        QPoint pos = piece->getBoardPosition();
+        QPoint pos = piece->getPositionFromBoard();
         int x = pos.x();
         int y = pos.y();
 
@@ -151,7 +165,7 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
             {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
         };
 
-        QPoint pos = piece->getBoardPosition();
+        QPoint pos = piece->getPositionFromBoard();
         int x0 = pos.x();
         int y0 = pos.y();
         ChessPiece::Color color = piece->getColor();
@@ -180,7 +194,7 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
             {1, 0}, {-1, 0}, {0, 1}, {0, -1}  // вправо, влево, вниз, вверх
         };
 
-        QPoint pos = piece->getBoardPosition();
+        QPoint pos = piece->getPositionFromBoard();
         int x0 = pos.x();
         int y0 = pos.y();
         ChessPiece::Color color = piece->getColor();
@@ -211,7 +225,7 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
             {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
         };
 
-        QPoint pos = piece->getBoardPosition();
+        QPoint pos = piece->getPositionFromBoard();
         int x0 = pos.x();
         int y0 = pos.y();
         ChessPiece::Color color = piece->getColor();
@@ -242,7 +256,7 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
             {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
         };
 
-        QPoint pos = piece->getBoardPosition();
+        QPoint pos = piece->getPositionFromBoard();
         int x0 = pos.x();
         int y0 = pos.y();
         ChessPiece::Color color = piece->getColor();
@@ -313,6 +327,14 @@ bool Board::isMoveValid(QPoint from, QPoint to) const
     return moves.contains(QPoint(to.x(), to.y()));
 }
 
+bool Board::isCorrectTurn(ChessPiece* piece) const {
+    return piece && piece->getColor() == currentTurn;
+}
+
+void Board::switchTurn() {
+    currentTurn = (currentTurn == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
+}
+
 bool Board::isEmpty(int x, int y) const
 {
     //qDebug() << "Checking (" << x << "," << y << ") ->" << (pieces[y][x] ? "Occupied" : "Empty");
@@ -350,17 +372,24 @@ void Board::capturePiece(int x, int y)
 
 }
 
-bool Board::isCorrectTurn(ChessPiece* piece) const {
-    return piece && piece->getColor() == currentTurn;
-}
+void Board::movePiece(ChessPiece *piece, int x, int y)
+{
+    QPoint from = piece->getPositionFromBoard();
 
-void Board::switchTurn() {
-    currentTurn = (currentTurn == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
-}
-
-void Board::placePiece(ChessPiece* piece, int x, int y) {
     pieces[y][x] = piece;
-    piece->setBoardPosition(QPoint(x, y));
+    piece->setPositionOnTheBoard(QPoint(x, y));
+    piece->setPos(x * Board::tileSize, y * Board::tileSize);
+
+    pieces[from.y()][from.x()] = nullptr;
+
+    // En Passant логика:
+    if (piece->getType() == ChessPiece::Pawn &&
+        abs(y - from.y()) == 2) {
+        int dir = (piece->getColor() == ChessPiece::White) ? 1 : -1;
+        enPassantTarget = QPoint(x, y + dir);
+    } else {
+        enPassantTarget = {-1, -1}; // сбрасываем, если не 2-клеточный ход пешки
+    }
 }
 
 ChessPiece *Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color, int x, int y) {

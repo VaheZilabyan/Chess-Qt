@@ -21,18 +21,6 @@ ChessPiece::ChessPiece(PieceType type, Color color, const QString& svgPath)
     board = Board::getInstance();
 }
 
-ChessPiece::ChessPiece(const ChessPiece &other)
-    : QGraphicsSvgItem() // Call base class copy constructor (important!)
-{
-    this->type = other.type;
-    this->color = other.color;
-    this->dragStartPos = other.dragStartPos;
-    this->position = other.position;
-    this->cachedMoves = other.cachedMoves;
-
-    this->board = other.board;  // Shallow copy: both pieces point to the same board
-}
-
 ChessPiece::PieceType ChessPiece::getType() const {
     return type;
 }
@@ -126,7 +114,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     if (!board->isCorrectTurn(this)) {
         qDebug() << "Not your turn!";
         // Откат назад
-        QPoint oldBoardPos = getBoardPosition();
+        QPoint oldBoardPos = getPositionFromBoard();
         setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
         return;
     }
@@ -137,15 +125,21 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     QPoint newBoardPos(x, y);
 
     bool moveAllowed = false;
-
     ChessPiece *promoted = nullptr;
-    // if (Board::getInstance()->isMoveValid(getBoardPosition(), newBoardPos)) { //this way we call availableMoves twice
+
     if (cachedMoves.contains(newBoardPos)) {
         qDebug() << "Move is allowed";
 
         // Попытка захвата вражеской фигуры
         if (board->isEnemy(x, y, this->getColor())) {
             board->capturePiece(x, y);  // 👈 Удаляет и заносит в список убитых
+        }
+
+        // En Passant - взятие на проходе
+        if (type == PieceType::Pawn && newBoardPos == board->getEnPassantTarget()) {
+            int dy = (getColor() == ChessPiece::White) ? 1 : -1;
+            QPoint enemyPos(newBoardPos.x(), newBoardPos.y() + dy);
+            board->capturePiece(enemyPos.x(), enemyPos.y());
         }
 
         // Pawn Promotion
@@ -164,11 +158,8 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         }
 
         ChessPiece *newPiece = (promoted == nullptr) ? this : promoted;
-        // Обновляем положение фигуры
-        board->removePiece(getBoardPosition().x(), getBoardPosition().y());
         board->movePiece(newPiece, x, y);
-        newPiece->setBoardPosition(newBoardPos);
-        newPiece->setPos(x * Board::tileSize, y * Board::tileSize);
+        //newPiece->setPos(x * Board::tileSize, y * Board::tileSize);
 
         // Удаляем старую пешку, если промоция
         if (promoted != nullptr) {
@@ -180,7 +171,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     } else {
         qDebug() << "Move not allowed, snapping back";
         // Возврат в старую позицию
-        QPoint oldBoardPos = getBoardPosition();
+        QPoint oldBoardPos = getPositionFromBoard();
         setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
     }
 
@@ -191,7 +182,6 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     if (promoted) {
         promoted->setSelectedState(false);
         selectedPiece = promoted;
-        //promoted->setDragStartPos(this->dragStartPos);//animast
     }
     if (moveAllowed) {
         board->clearHints();

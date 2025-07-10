@@ -33,13 +33,10 @@ public:
     bool isEmpty(int x, int y) const;
     bool isEnemy(int, int, ChessPiece::Color) const;
 
-    void removePiece(int x, int y) { pieces[y][x] = nullptr; }
     void capturePiece(int x, int y);
-    void movePiece(ChessPiece* piece, int x, int y) { pieces[y][x] = piece; }
-    void placePiece(ChessPiece* piece, int x, int y);
+    void movePiece(ChessPiece* piece, int x, int y);
 
     void setScene(QGraphicsScene *s) { this->scene = s; }
-    QGraphicsScene* getScene() { return scene; }
 
     static constexpr int tileSize = 65;
 
@@ -49,6 +46,7 @@ public:
     void switchTurn();
 
     ChessPiece* pawnPromotion(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y);
+    QPoint getEnPassantTarget() const { return enPassantTarget; }
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
@@ -60,6 +58,8 @@ private:
     mutable QVector<ChessPiece*> killedWhitePieces;
     mutable QVector<ChessPiece*> killedBlackPieces;
     bool hasMoved = false;
+    QPoint enPassantTarget = {-1, -1}; // если -1,-1 — значит нет возможности для взятия
+
 
 signals:
     void pieceCaptured(ChessPiece* piece);  // фигура, которую убили
