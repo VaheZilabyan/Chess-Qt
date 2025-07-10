@@ -48,7 +48,7 @@ public:
     bool isCorrectTurn(ChessPiece* piece) const;
     void switchTurn();
 
-    void pawnPromotion(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y);
+    ChessPiece* pawnPromotion(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y);
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }

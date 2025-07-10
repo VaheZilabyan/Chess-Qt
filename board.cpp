@@ -363,19 +363,7 @@ void Board::placePiece(ChessPiece* piece, int x, int y) {
     piece->setBoardPosition(QPoint(x, y));
 }
 
-void Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color, int x, int y) {
-    /*ChessPiece* pawn = pieceAt(x, y);
-    if (!pawn) {
-        qWarning() << "❌ No piece at" << x << y;
-        return;
-    }
-
-    // Удалить старую пешку
-    scene->removeItem(pawn);
-    pawn->hide();
-    removePiece(x, y);
-    delete pawn;*/
-
+ChessPiece *Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color, int x, int y) {
     // Заменить новой фигурой
     QString svgPath;
     if (color == ChessPiece::White) {
@@ -391,9 +379,8 @@ void Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color
     }
 
     ChessPiece* promoted = new ChessPiece(newType, color, svgPath);
-    promoted->setPos(x * tileSize, y * tileSize);
     promoted->setScale(tileSize / 128.0);
     scene->addItem(promoted);
-    placePiece(promoted, x, y);
+    return promoted;
 }
 

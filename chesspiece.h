@@ -23,6 +23,7 @@ public:
 
     QPoint getBoardPosition() const { return position; }
     void setBoardPosition(const QPoint& pos) { position = pos; }
+    void setDragStartPos(const QPointF& pos) { dragStartPos = pos; }
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
@@ -38,7 +39,6 @@ private:
 
     QPointF dragStartPos;
     QPoint position;
-    QPointF oldClickPosition;
 
     static ChessPiece* selectedPiece;
     QList<QPoint> cachedMoves;
