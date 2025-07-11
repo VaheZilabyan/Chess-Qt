@@ -16,7 +16,7 @@ void Board::setupInitialPosition()
             square->setData(1, col);
         }
     }
-    QGraphicsRectItem *square = scene->addRect(0, 0, 8 * tileSize, 8 * tileSize, QPen(Qt::gray));
+    //QGraphicsRectItem *square = scene->addRect(0, 0, 8 * tileSize, 8 * tileSize, QPen(Qt::gray));
 
     int num = 97;
     for (int i = 0; i < 8; ++i) {
@@ -93,6 +93,65 @@ void Board::setupInitialPosition()
         wPiece->setPositionOnTheBoard(QPoint(col, 7));
         bPiece->setPositionOnTheBoard(QPoint(col, 0));
     }
+}
+
+QList<QPoint> Board::legalMoves(ChessPiece* piece)
+{
+    QList<QPoint> moves = availableMoves(piece);
+    QList<QPoint> safeMoves;
+
+    QPoint originalPos = piece->getPositionFromBoard();
+    ChessPiece* originalTarget = nullptr;
+
+    if (piece->getType() == ChessPiece::King) {
+        for (const QPoint& move : moves) {
+            int x = move.x();
+            int y = move.y();
+
+            // Временный ход
+            originalTarget = pieces[y][x];
+            originalPos = piece->getPositionFromBoard();
+
+            pieces[originalPos.y()][originalPos.x()] = nullptr;
+            pieces[y][x] = piece;
+            piece->setPositionOnTheBoard(move);
+
+            // 👇 Новый: проверка, не атакуется ли поле
+            if (!isSquareAttacked(move, piece->getColor())) {
+                safeMoves.append(move);
+            }
+
+            // Откат
+            pieces[y][x] = originalTarget;
+            pieces[originalPos.y()][originalPos.x()] = piece;
+            piece->setPositionOnTheBoard(originalPos);
+        }
+
+        return safeMoves; // досрочно для короля
+    }
+
+    for (const QPoint& move : moves) {
+        int x = move.x();
+        int y = move.y();
+
+        // --- Сохраняем состояние ---
+        originalTarget = pieces[y][x];
+        pieces[originalPos.y()][originalPos.x()] = nullptr;
+        pieces[y][x] = piece;
+        piece->setPositionOnTheBoard(move);
+
+        // --- Проверка шаха ---
+        if (!isKingInCheck(piece->getColor())) {
+            safeMoves.append(move);
+        }
+
+        // --- Откат ---
+        pieces[originalPos.y()][originalPos.x()] = piece;
+        pieces[y][x] = originalTarget;
+        piece->setPositionOnTheBoard(originalPos);
+    }
+
+    return safeMoves;
 }
 
 QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
@@ -259,7 +318,7 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
         QPoint pos = piece->getPositionFromBoard();
         int x0 = pos.x();
         int y0 = pos.y();
-        ChessPiece::Color color = piece->getColor();
+        //ChessPiece::Color color = piece->getColor();
 
         for (const QPoint& dir : kingDirs) {
             int x = x0 + dir.x();
@@ -306,7 +365,6 @@ void Board::clearHints() {
 ChessPiece *Board::pieceAt(int x, int y) const
 {
     if (x < 0 || x >= 8 || y < 0 || y >= 8) {
-        qDebug() << "not in inside border";
         return nullptr;
     }
 
@@ -323,7 +381,7 @@ bool Board::isMoveValid(QPoint from, QPoint to) const
     ChessPiece* piece = pieces[from.y()][from.x()];
     if (!piece) return false;
 
-    QList<QPoint> moves = availableMoves(piece);
+    QList<QPoint> moves = availableMoves(piece); //legalMove?
     return moves.contains(QPoint(to.x(), to.y()));
 }
 
@@ -337,7 +395,6 @@ void Board::switchTurn() {
 
 bool Board::isEmpty(int x, int y) const
 {
-    //qDebug() << "Checking (" << x << "," << y << ") ->" << (pieces[y][x] ? "Occupied" : "Empty");
     if (pieceAt(x, y) == nullptr) return true;
     return false;
 }
@@ -390,9 +447,16 @@ void Board::movePiece(ChessPiece *piece, int x, int y)
     } else {
         enPassantTarget = {-1, -1}; // сбрасываем, если не 2-клеточный ход пешки
     }
+
+    if (piece->getType() == ChessPiece::King) {
+        if (piece->getColor() == ChessPiece::White)
+            whiteKingPos = QPoint(x, y);
+        else
+            blackKingPos = QPoint(x, y);
+    }
 }
 
-ChessPiece *Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color, int x, int y) {
+ChessPiece *Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color) {
     // Заменить новой фигурой
     QString svgPath;
     if (color == ChessPiece::White) {
@@ -411,5 +475,41 @@ ChessPiece *Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Colo
     promoted->setScale(tileSize / 128.0);
     scene->addItem(promoted);
     return promoted;
+}
+
+bool Board::isSquareAttacked(QPoint pos, ChessPiece::Color byColor)
+{
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            ChessPiece* piece = pieces[y][x];
+            if (piece && piece->getColor() != byColor) {
+                QList<QPoint> attacks = availableMoves(piece); // Без фильтрации по шаху
+                if (attacks.contains(pos)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Board::isKingInCheck(ChessPiece::Color color)
+{
+    QPoint kingPos = (color == ChessPiece::White) ? whiteKingPos : blackKingPos;
+
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            ChessPiece* piece = pieces[y][x];
+            if (piece && piece->getColor() != color) {
+                QList<QPoint> enemyMoves = availableMoves(piece);
+                if (enemyMoves.contains(kingPos)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
 }
 

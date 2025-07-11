@@ -59,8 +59,10 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 
     position = toBoardCoord(event->scenePos()); //do the same
 
-    cachedMoves  = Board::getInstance()->availableMoves(this);
-    Board::getInstance()->showHints(cachedMoves );
+    //cachedMoves  = Board::getInstance()->availableMoves(this);
+    cachedMoves = board->legalMoves(this);
+
+    board->showHints(cachedMoves );
 
     // Unselect previous piece
     if (selectedPiece && selectedPiece != this) {
@@ -128,7 +130,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     ChessPiece *promoted = nullptr;
 
     if (cachedMoves.contains(newBoardPos)) {
-        qDebug() << "Move is allowed";
+        //qDebug() << "Move is allowed";
 
         // Попытка захвата вражеской фигуры
         if (board->isEnemy(x, y, this->getColor())) {
@@ -152,13 +154,13 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
                 if (dialog.exec() == QDialog::Accepted) {
                     ChessPiece::PieceType promotedType = dialog.getSelectedPieceType();
                     qDebug() << "pawn become to " << promotedType;
-                    promoted = board->pawnPromotion(promotedType, color, x, finalRank);
+                    promoted = board->pawnPromotion(promotedType, color);
                 }
             }
         }
 
-        ChessPiece *newPiece = (promoted == nullptr) ? this : promoted;
-        board->movePiece(newPiece, x, y);
+        ChessPiece *currentPiece = (promoted == nullptr) ? this : promoted;
+        board->movePiece(currentPiece, x, y);
         //newPiece->setPos(x * Board::tileSize, y * Board::tileSize);
 
         // Удаляем старую пешку, если промоция
@@ -167,9 +169,15 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         }
 
         moveAllowed = true;
+
+        ChessPiece::Color opponentColor = (getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
+        if (board->isKingInCheck(opponentColor)) {
+            qDebug() << "Шах!";
+        }
+
         Board::getInstance()->switchTurn();
     } else {
-        qDebug() << "Move not allowed, snapping back";
+        //qDebug() << "Move not allowed, snapping back";
         // Возврат в старую позицию
         QPoint oldBoardPos = getPositionFromBoard();
         setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);

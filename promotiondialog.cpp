@@ -10,6 +10,7 @@ PromotionDialog::PromotionDialog(ChessPiece::Color color, QWidget *parent)
     : QDialog(parent), m_selectedType(ChessPiece::PieceType::Queen)
 {
     setWindowTitle("Promote Pawn");
+    setWindowFlags((windowFlags() | Qt::CustomizeWindowHint) & ~Qt::WindowCloseButtonHint);
     setFixedSize(340,100);
 
     scene = new QGraphicsScene(this);

@@ -26,6 +26,7 @@ public:
     bool isMoveValid(QPoint from, QPoint to) const;
     // void makeMove(QPoint from, QPoint to);
 
+    QList<QPoint> legalMoves(ChessPiece* piece);
     QList<QPoint> availableMoves(ChessPiece* piece) const;       // return all aviable moves
     void showHints(const QList<QPoint>& moves);                 //  show aviable moves
     void clearHints();
@@ -45,8 +46,11 @@ public:
     bool isCorrectTurn(ChessPiece* piece) const;
     void switchTurn();
 
-    ChessPiece* pawnPromotion(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y);
+    ChessPiece* pawnPromotion(ChessPiece::PieceType type, ChessPiece::Color color);
     QPoint getEnPassantTarget() const { return enPassantTarget; }
+
+    bool isKingInCheck(ChessPiece::Color color);
+    bool isSquareAttacked(QPoint pos, ChessPiece::Color byColor);
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
@@ -58,8 +62,9 @@ private:
     mutable QVector<ChessPiece*> killedWhitePieces;
     mutable QVector<ChessPiece*> killedBlackPieces;
     bool hasMoved = false;
-    QPoint enPassantTarget = {-1, -1}; // если -1,-1 — значит нет возможности для взятия
-
+    QPoint enPassantTarget = {-1, -1};
+    QPoint whiteKingPos = {4, 7};
+    QPoint blackKingPos = {4, 0};
 
 signals:
     void pieceCaptured(ChessPiece* piece);  // фигура, которую убили
