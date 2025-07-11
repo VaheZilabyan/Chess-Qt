@@ -7,6 +7,7 @@
 #include <QGraphicsColorizeEffect>
 #include <QSvgRenderer>
 #include <QFile>
+#include <QMessageBox>
 
 ChessPiece* ChessPiece::selectedPiece = nullptr;
 
@@ -131,6 +132,27 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 
     if (cachedMoves.contains(newBoardPos)) {
         //qDebug() << "Move is allowed";
+        //ракировка
+        if (type == ChessPiece::King) {
+            int row = (getColor() == ChessPiece::White) ? 7 : 0;
+
+            // КОРОТКАЯ
+            if (newBoardPos == QPoint(6, row)) {
+                ChessPiece* rook = board->pieceAt(7, row);
+                if (rook) {
+                    board->movePiece(rook, 5, row); // h1 → f1
+                }
+            }
+
+            // ДЛИННАЯ
+            if (newBoardPos == QPoint(2, row)) {
+                ChessPiece* rook = board->pieceAt(0, row);
+                if (rook) {
+                    board->movePiece(rook, 3, row); // a1 → d1
+                }
+            }
+        }
+
 
         // Попытка захвата вражеской фигуры
         if (board->isEnemy(x, y, this->getColor())) {
@@ -173,6 +195,13 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         ChessPiece::Color opponentColor = (getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
         if (board->isKingInCheck(opponentColor)) {
             qDebug() << "Шах!";
+        }
+        if (board->isCheckmate(opponentColor)) {
+            qDebug() << "♚♛ МАТ!";
+            QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
+        } else if (board->isStalemate(opponentColor)) {
+            qDebug() << "🤝 ПАТ!";
+            QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
         }
 
         Board::getInstance()->switchTurn();

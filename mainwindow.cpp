@@ -43,14 +43,14 @@ MainWindow::MainWindow(QWidget *parent)
     blackGraveScene = new QGraphicsScene(this);
 
     whiteGraveView->setScene(whiteGraveScene);
-    //whiteGraveView->setFixedSize(8 * Board::tileSize / 2, 5 * Board::tileSize);
-    //whiteGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    //whiteGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    whiteGraveView->setFixedSize(8 * Board::tileSize / 2, 100);
+    whiteGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    whiteGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     blackGraveView->setScene(blackGraveScene);
-    //blackGraveView->setFixedSize(8 * Board::tileSize / 2, 5 * Board::tileSize);
-    //blackGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    //blackGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    blackGraveView->setFixedSize(8 * Board::tileSize / 2, 100);
+    blackGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    blackGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     QWidget *graveWidget = new QWidget(this);
     QVBoxLayout *graveLayout = new QVBoxLayout(graveWidget);
@@ -84,12 +84,12 @@ void MainWindow::onPieceCaptured(ChessPiece* piece) {
     ChessPiece* copy = new ChessPiece(piece->getType(), piece->getColor(), piece->getSvgPath());
 
     int index = graveScene->items().size();
-    int row = index / 4;
-    int col = index % 4;
+    int row = index / 8;
+    int col = index % 8;
 
     int tile = Board::tileSize;
-    copy->setScale((tile * 0.6) / 128.0);
-    copy->setPos(col * 40, row * 35);
+    copy->setScale((tile * 0.5) / 128.0);
+    copy->setPos(col * 30, row * 35);
 
     graveScene->addItem(copy);
 }

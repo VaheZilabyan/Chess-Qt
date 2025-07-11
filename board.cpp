@@ -331,6 +331,34 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
             }
         }
         // castling add later
+        if (piece->getType() == ChessPiece::King && !piece->hasMovedAlready()) {
+            int row = (piece->getColor() == ChessPiece::White) ? 7 : 0;
+
+            // КОРОТКАЯ РОКИРОВКА (король вправо)
+            ChessPiece* rookShort = pieceAt(7, row);
+            if (rookShort && rookShort->getType() == ChessPiece::Rook &&
+                !rookShort->hasMovedAlready() &&
+                isEmpty(5, row) && isEmpty(6, row) &&
+                !isSquareAttacked(QPoint(4, row), piece->getColor()) &&
+                !isSquareAttacked(QPoint(5, row), piece->getColor()) &&
+                !isSquareAttacked(QPoint(6, row), piece->getColor())) {
+
+                moves.append(QPoint(6, row)); // Король пойдёт на g1/g8
+            }
+
+            // ДЛИННАЯ РОКИРОВКА (король влево)
+            ChessPiece* rookLong = pieceAt(0, row);
+            if (rookLong && rookLong->getType() == ChessPiece::Rook &&
+                !rookLong->hasMovedAlready() &&
+                isEmpty(1, row) && isEmpty(2, row) && isEmpty(3, row) &&
+                !isSquareAttacked(QPoint(4, row), piece->getColor()) &&
+                !isSquareAttacked(QPoint(3, row), piece->getColor()) &&
+                !isSquareAttacked(QPoint(2, row), piece->getColor())) {
+
+                moves.append(QPoint(2, row)); // Король пойдёт на c1/c8
+            }
+        }
+
 
         break;
     }
@@ -454,6 +482,10 @@ void Board::movePiece(ChessPiece *piece, int x, int y)
         else
             blackKingPos = QPoint(x, y);
     }
+
+    if (piece->getType() == ChessPiece::King || piece->getType() == ChessPiece::Rook) {
+        piece->markAsMoved();
+    }
 }
 
 ChessPiece *Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Color color) {
@@ -477,7 +509,7 @@ ChessPiece *Board::pawnPromotion(ChessPiece::PieceType newType, ChessPiece::Colo
     return promoted;
 }
 
-bool Board::isSquareAttacked(QPoint pos, ChessPiece::Color byColor)
+bool Board::isSquareAttacked(QPoint pos, ChessPiece::Color byColor) const
 {
     for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
@@ -511,5 +543,47 @@ bool Board::isKingInCheck(ChessPiece::Color color)
     }
 
     return false;
+}
+
+bool Board::isCheckmate(ChessPiece::Color color)
+{
+    if (!isKingInCheck(color))
+        return false; // если нет шаха — не может быть мат
+
+    // Проходим по всем фигурам этого цвета
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            ChessPiece* piece = pieces[y][x];
+            if (piece && piece->getColor() == color) {
+                QList<QPoint> moves = legalMoves(piece);
+                if (!moves.isEmpty()) {
+                    return false; // хоть один ход есть → не мат
+                }
+            }
+        }
+    }
+
+    return true; // и шах, и ходов нет → мат
+}
+
+bool Board::isStalemate(ChessPiece::Color color)
+{
+    if (isKingInCheck(color))
+        return false; // если шах — это не пат
+
+    // Проверяем все фигуры игрока
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            ChessPiece* piece = pieces[y][x];
+            if (piece && piece->getColor() == color) {
+                QList<QPoint> moves = legalMoves(piece);
+                if (!moves.isEmpty()) {
+                    return false; // есть хоть один ход — не пат
+                }
+            }
+        }
+    }
+
+    return true; // ни одного хода и нет шаха → пат
 }
 

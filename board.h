@@ -50,7 +50,11 @@ public:
     QPoint getEnPassantTarget() const { return enPassantTarget; }
 
     bool isKingInCheck(ChessPiece::Color color);
-    bool isSquareAttacked(QPoint pos, ChessPiece::Color byColor);
+    bool isSquareAttacked(QPoint pos, ChessPiece::Color byColor) const;
+    bool isCheckmate(ChessPiece::Color color);
+    bool isStalemate(ChessPiece::Color color);
+
+
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
@@ -61,7 +65,6 @@ private:
     QList<QGraphicsEllipseItem*> hintDots;
     mutable QVector<ChessPiece*> killedWhitePieces;
     mutable QVector<ChessPiece*> killedBlackPieces;
-    bool hasMoved = false;
     QPoint enPassantTarget = {-1, -1};
     QPoint whiteKingPos = {4, 7};
     QPoint blackKingPos = {4, 0};

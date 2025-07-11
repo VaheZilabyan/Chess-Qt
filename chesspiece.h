@@ -23,6 +23,10 @@ public:
     QPoint getPositionFromBoard() const { return position; }
     void setPositionOnTheBoard(const QPoint& pos) { position = pos; }
 
+    //ракировка
+    bool hasMovedAlready() const { return hasMoved; }
+    void markAsMoved() { hasMoved = true; }
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -38,10 +42,11 @@ private:
     QPointF dragStartPos;
     QPoint position;
 
-    static ChessPiece* selectedPiece;
     QList<QPoint> cachedMoves;
+    bool hasMoved = false;
 
     Board *board;
+    static ChessPiece* selectedPiece;
 };
 
 #endif // PIECE_H
