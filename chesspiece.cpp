@@ -114,10 +114,10 @@ void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     Board* board = Board::getInstance();
 
+    QPoint oldBoardPos = getPositionFromBoard();
     if (!board->isCorrectTurn(this)) {
         qDebug() << "Not your turn!";
         // Откат назад
-        QPoint oldBoardPos = getPositionFromBoard();
         setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
         return;
     }
@@ -152,7 +152,6 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
                 }
             }
         }
-
 
         // Попытка захвата вражеской фигуры
         if (board->isEnemy(x, y, this->getColor())) {
@@ -203,6 +202,9 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             qDebug() << "🤝 ПАТ!";
             QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
         }
+
+        //need to add in historyMove
+        board->addMoveHistory(currentPiece, oldBoardPos, newBoardPos);
 
         Board::getInstance()->switchTurn();
     } else {

@@ -54,7 +54,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     QWidget *graveWidget = new QWidget(this);
     QVBoxLayout *graveLayout = new QVBoxLayout(graveWidget);
+
+    historyWidget = new QTableWidget(0, 2);
+    historyWidget->setHorizontalHeaderLabels(QStringList() << "Piece" << "Move");
+    historyWidget->setColumnWidth(0, 122);
+    historyWidget->setColumnWidth(1, 122);
+    historyWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
     graveLayout->addWidget(whiteGraveView);
+    graveLayout->addWidget(historyWidget);
     graveLayout->addWidget(blackGraveView);
 
     mainLayout->addWidget(graveWidget);
@@ -68,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(centralWidget);
 
     connect(board, &Board::pieceCaptured, this, &MainWindow::onPieceCaptured);
+    connect(board, &Board::addMoveSignal, this, &MainWindow::onAddMove);
 }
 
 MainWindow::~MainWindow() {}
@@ -93,6 +102,56 @@ void MainWindow::onPieceCaptured(ChessPiece* piece) {
 
     graveScene->addItem(copy);
 }
+
+void MainWindow::onAddMove(ChessPiece *piece, QPoint from, QPoint to)
+{
+    QString pieceStr = getPieceNameStr(piece);
+    QString fromX = QString(QChar(97 + from.x()));
+    QString fromY = QString::number(8 - from.y());
+    QString toX = QString(QChar(97 + to.x()));
+    QString toY = QString::number(8 - to.y());
+
+    int row = historyWidget->rowCount();
+    historyWidget->insertRow(row);
+    historyWidget->setItem(row, 0, new QTableWidgetItem(pieceStr));
+    historyWidget->setItem(row, 1, new QTableWidgetItem(fromX + fromY + "-" + toX + toY));
+
+    historyWidget->scrollToItem(historyWidget->item(row, 0));
+}
+
+QString MainWindow::getPieceNameStr(ChessPiece *piece)
+{
+    ChessPiece::Color color = piece->getColor();
+    ChessPiece::PieceType type = piece->getType();
+    QString pieceTypeStr = "";
+
+    if (color == ChessPiece::Color::White) pieceTypeStr += "w ";
+    else pieceTypeStr += "b ";
+
+    switch (type) {
+    case ChessPiece::PieceType::Pawn:
+        pieceTypeStr += "Pawn";
+        break;
+    case ChessPiece::PieceType::Rook:
+        pieceTypeStr += "Rook";
+        break;
+    case ChessPiece::PieceType::Knight:
+        pieceTypeStr += "Knight";
+        break;
+    case ChessPiece::PieceType::Bishop:
+        pieceTypeStr += "Bishop";
+        break;
+    case ChessPiece::PieceType::King:
+        pieceTypeStr += "King";
+        break;
+    case ChessPiece::PieceType::Queen:
+        pieceTypeStr += "Queen";
+        break;
+    }
+    return pieceTypeStr;
+}
+
+
 
 
 

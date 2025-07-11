@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QTableWidget>
 
 class MainWindow : public QMainWindow
 {
@@ -17,8 +18,11 @@ public:
 
 private slots:
     void onPieceCaptured(ChessPiece* piece);
+    void onAddMove(ChessPiece* piece, QPoint from, QPoint to);
 
 private:
+    QString getPieceNameStr(ChessPiece*);
+
     static constexpr int MIN_WIDTH = 840;
     static constexpr int MIN_HEIGHT = 600;
 
@@ -27,5 +31,6 @@ private:
     QGraphicsView *blackGraveView;
     QGraphicsScene* whiteGraveScene;
     QGraphicsScene* blackGraveScene;
+    QTableWidget *historyWidget;
 };
 #endif // MAINWINDOW_H

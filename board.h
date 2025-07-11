@@ -54,7 +54,9 @@ public:
     bool isCheckmate(ChessPiece::Color color);
     bool isStalemate(ChessPiece::Color color);
 
-
+    void addMoveHistory(ChessPiece* piece, QPoint from, QPoint to) {
+        emit addMoveSignal(piece, from, to);
+    }
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
@@ -71,6 +73,7 @@ private:
 
 signals:
     void pieceCaptured(ChessPiece* piece);  // фигура, которую убили
+    void addMoveSignal(ChessPiece* piece, QPoint from, QPoint to);
 };
 
 #endif // BOARD_H
