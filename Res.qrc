@@ -13,4 +13,23 @@
         <file>img/rook-b.svg</file>
         <file>img/rook-w.svg</file>
     </qresource>
+
+    <qresource prefix="/chess_sounds">
+        <file>sounds/capture.mp3</file>
+        <file>sounds/castle.mp3</file>
+        <file>sounds/check.mp3</file>
+        <file>sounds/game-draw.mp3</file>
+	<file>sounds/game-start.mp3</file>
+	<file>sounds/move.mp3</file>
+	<file>sounds/promote.mp3</file>
+	<file>sounds/tenseconds.mp3</file>
+    </qresource>
+
+    <qresource prefix="/board_colors">
+        <file>img/white-gray.png</file>
+	<file>img/white_brown.png</file>
+	<file>img/white-blue.png</file>
+	<file>img/white-green.png</file>
+	<file>img/gray-darkgray.png</file>
+    </qresource>
 </RCC>

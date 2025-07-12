@@ -19,6 +19,8 @@ public:
 private slots:
     void onPieceCaptured(ChessPiece* piece);
     void onAddMove(ChessPiece* piece, QPoint from, QPoint to);
+    void onNewGameClicked();
+    void onChangeBoardClicked();
 
 private:
     QString getPieceNameStr(ChessPiece*);

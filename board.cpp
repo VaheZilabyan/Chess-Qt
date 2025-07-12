@@ -5,95 +5,124 @@
     return &instance;
 }*/
 
-void Board::setupInitialPosition()
+void Board::addPiece(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y)
 {
-    // print Board
+    QString path = getSvgPath(type, color);
+    ChessPiece* piece = new ChessPiece(type, color, path);
+    piece->setScale(tileSize / 128.0);
+    piece->setPos(x * tileSize, y * tileSize);
+    piece->setPositionOnTheBoard(QPoint(x, y));
+    scene->addItem(piece);
+    pieces[y][x] = piece;
+    piece->setZValue(1);
+
+    // Обновляем позицию короля
+    if (type == ChessPiece::King) {
+        if (color == ChessPiece::White)
+            whiteKingPos = QPoint(x, y);
+        else
+            blackKingPos = QPoint(x, y);
+    }
+}
+
+QString Board::getSvgPath(ChessPiece::PieceType type, ChessPiece::Color color)
+{
+    QString base = ":/svg_files/img/";
+    QString name;
+
+    switch (type) {
+    case ChessPiece::King:   name = "king"; break;
+    case ChessPiece::Queen:  name = "queen"; break;
+    case ChessPiece::Rook:   name = "rook"; break;
+    case ChessPiece::Bishop: name = "bishop"; break;
+    case ChessPiece::Knight: name = "knight"; break;
+    case ChessPiece::Pawn:   name = "pawn"; break;
+    }
+
+    name += (color == ChessPiece::White) ? "-w.svg" : "-b.svg";
+    return base + name;
+}
+
+void Board::resetBoard()    //calls for new game
+{
+    // 1. Удаляем все фигуры с доски и со сцены
+    for (int y = 0; y < 8; ++y) {
+        for (int x = 0; x < 8; ++x) {
+            if (pieces[y][x]) {
+                scene->removeItem(pieces[y][x]);
+                delete pieces[y][x];
+                pieces[y][x] = nullptr;
+            }
+        }
+    }
+    // 2. Сброс данных
+    hintDots.clear();
+    killedWhitePieces.clear();
+    killedBlackPieces.clear();
+    whiteKingPos = QPoint(4, 7);
+    blackKingPos = QPoint(4, 0);
+    enPassantTarget = QPoint(-1, -1);
+    currentTurn = ChessPiece::White;
+    ChessPiece::setSelectedPiece(nullptr);
+
+    clearHints();
+    setupInitialPosition();
+
+    qDebug() << "Board reset completed.";
+}
+
+void Board::setupBoard() {
+    // Перед перерисовкой доски:
+    for (QGraphicsItem* item : scene->items()) {
+        // Удаляем только клетки (те, у кого ZValue == 0)
+        if (item->zValue() == 0) {
+            scene->removeItem(item);
+            delete item;
+        }
+    }
+
+    // Рисуем доску
     for (int row = 0; row < 8; ++row) {
         for (int col = 0; col < 8; ++col) {
-            QColor color = (row + col) % 2 == 0 ? Qt::white : Qt::gray;
+            QColor color = (row + col) % 2 == 0 ? boardColor.first : boardColor.second;
             QGraphicsRectItem* square = scene->addRect(col * tileSize, row * tileSize, tileSize, tileSize, QPen(Qt::NoPen), QBrush(color));
             square->setData(0, row);
             square->setData(1, col);
+            square->setZValue(0);
         }
     }
-    //QGraphicsRectItem *square = scene->addRect(0, 0, 8 * tileSize, 8 * tileSize, QPen(Qt::gray));
 
-    int num = 97;
+    // Текстовые координаты
     for (int i = 0; i < 8; ++i) {
-        QColor color = i % 2 == 0 ? Qt::white : Qt::darkGray;
-        QGraphicsTextItem *text = scene->addText(QString(QChar(num++)), QFont("Arial", 8, QFont::Bold, true));
-        text->setDefaultTextColor(color);
-        text->setPos(i * tileSize - 3, 7 * tileSize + tileSize / 1.35);
-
+        //QColor color = i % 2 == 0 ? Qt::white : Qt::black;
+        scene->addText(QString(QChar(97 + i)), QFont("Arial", 8, QFont::Bold, true))->setPos(i * tileSize - 3, 7 * tileSize + tileSize / 1.35);
+        scene->addText(QString::number(8 - i), QFont("Arial", 8, QFont::Bold, true))->setPos(7 * tileSize + tileSize / 1.22, i * tileSize);
     }
-    for (int i = 7; i >= 0; --i) {
-        QColor color = i % 2 == 0 ? Qt::white : Qt::darkGray;
-        QGraphicsTextItem *text = scene->addText(QString::number(8 - i), QFont("Arial", 8, QFont::Bold, true));
-        text->setDefaultTextColor(color);
-        text->setPos(7 * tileSize + tileSize/1.22, i * tileSize);
-    }
+}
 
-    QMap<QString, QString> svgPaths = {
-                                       {"wp", ":/svg_files/img/pawn-w.svg"},
-                                       {"wr", ":/svg_files/img/rook-w.svg"},
-                                       {"wn", ":/svg_files/img/knight-w.svg"},
-                                       {"wb", ":/svg_files/img/bishop-w.svg"},
-                                       {"wq", ":/svg_files/img/queen-w.svg"},
-                                       {"wk", ":/svg_files/img/king-w.svg"},
-
-                                       {"bp", ":/svg_files/img/pawn-b.svg"},
-                                       {"br", ":/svg_files/img/rook-b.svg"},
-                                       {"bn", ":/svg_files/img/knight-b.svg"},
-                                       {"bb", ":/svg_files/img/bishop-b.svg"},
-                                       {"bq", ":/svg_files/img/queen-b.svg"},
-                                       {"bk", ":/svg_files/img/king-b.svg"},
-                                       };
+void Board::setupInitialPosition()
+{
+    setupBoard();
 
     // Пешки
     for (int col = 0; col < 8; ++col) {
-        ChessPiece* wp = new ChessPiece(ChessPiece::Pawn, ChessPiece::White, svgPaths["wp"]); //
-        wp->setPos(col * tileSize, 6 * tileSize);
-        wp->setScale(tileSize / 128.0);  // подстройка масштаба
-        scene->addItem(wp);
-        pieces[6][col] = wp;
-
-        ChessPiece* bp = new ChessPiece(ChessPiece::Pawn, ChessPiece::Black, svgPaths["bp"]);
-        bp->setPos(col * tileSize, 1 * tileSize);
-        bp->setScale(tileSize / 128.0);
-        scene->addItem(bp);
-        pieces[1][col] = bp;
-
-        wp->setPositionOnTheBoard(QPoint(col, 6));
-        bp->setPositionOnTheBoard(QPoint(col, 1));
+        addPiece(ChessPiece::Pawn, ChessPiece::White, col, 6);
+        addPiece(ChessPiece::Pawn, ChessPiece::Black, col, 1);
     }
 
-    // Расстановка других фигур по стандарту
+    // Остальные фигуры
     const ChessPiece::PieceType order[8] = {
         ChessPiece::Rook, ChessPiece::Knight, ChessPiece::Bishop,
         ChessPiece::Queen, ChessPiece::King,
         ChessPiece::Bishop, ChessPiece::Knight, ChessPiece::Rook
     };
 
-    const QString whiteKeys[8] = { "wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr" };
-    const QString blackKeys[8] = { "br", "bn", "bb", "bq", "bk", "bb", "bn", "br" };
-
     for (int col = 0; col < 8; ++col) {
-        ChessPiece* wPiece = new ChessPiece(order[col], ChessPiece::White, svgPaths[whiteKeys[col]]);
-        wPiece->setPos(col * tileSize, 7 * tileSize);
-        wPiece->setScale(tileSize / 128.0);
-        scene->addItem(wPiece);
-        pieces[7][col] = wPiece;
-
-        ChessPiece* bPiece = new ChessPiece(order[col], ChessPiece::Black, svgPaths[blackKeys[col]]);
-        bPiece->setPos(col * tileSize, 0 * tileSize);
-        bPiece->setScale(tileSize / 128.0);
-        scene->addItem(bPiece);
-        pieces[0][col] = bPiece;
-
-        wPiece->setPositionOnTheBoard(QPoint(col, 7));
-        bPiece->setPositionOnTheBoard(QPoint(col, 0));
+        addPiece(order[col], ChessPiece::White, col, 7);
+        addPiece(order[col], ChessPiece::Black, col, 0);
     }
 }
+
 
 QList<QPoint> Board::legalMoves(ChessPiece* piece)
 {
@@ -378,6 +407,7 @@ void Board::showHints(const QList<QPoint>& moves) {
             QPen(Qt::NoPen),
             QBrush(QColor(50, 150, 255, 150))
             );
+        dot->setZValue(1);
         hintDots.append(dot);
     }
 }
@@ -587,3 +617,7 @@ bool Board::isStalemate(ChessPiece::Color color)
     return true; // ни одного хода и нет шаха → пат
 }
 
+void Board::setBoardColor(QPair<QColor, QColor> bc) {
+    boardColor = bc;
+    setupBoard();
+}

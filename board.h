@@ -5,6 +5,7 @@
 
 #include <QGraphicsScene>
 #include <QObject>
+//#include <QSoundEffect>
 
 // Singleton class
 class Board : public QObject {
@@ -20,7 +21,11 @@ public:
         static Board instance(parent);
         return &instance;
     }
+
+    void resetBoard();
+    void setupBoard();
     void setupInitialPosition();
+    void addPiece(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y);
 
     ChessPiece* pieceAt(int x, int y) const;
     bool isMoveValid(QPoint from, QPoint to) const;
@@ -58,10 +63,24 @@ public:
         emit addMoveSignal(piece, from, to);
     }
 
+    void setBoardColor(QPair<QColor, QColor> bc);
+
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
+    QString getSvgPath(ChessPiece::PieceType type, ChessPiece::Color color);
 
 private:
+    /*QSoundEffect moveSound;
+    QSoundEffect captureSound;
+    QSoundEffect checkSound;
+    QSoundEffect promoteSound;
+
+    void setupSounds();
+    void playMoveSound();
+    void playCaptureSound();
+    void playCheckSound();
+    void playPromoteSound();*/
+
     ChessPiece *pieces[8][8] = {};
     QGraphicsScene *scene = nullptr;
     QList<QGraphicsEllipseItem*> hintDots;
@@ -70,6 +89,8 @@ private:
     QPoint enPassantTarget = {-1, -1};
     QPoint whiteKingPos = {4, 7};
     QPoint blackKingPos = {4, 0};
+
+    QPair<QColor, QColor> boardColor = {Qt::white, Qt::gray};
 
 signals:
     void pieceCaptured(ChessPiece* piece);  // фигура, которую убили

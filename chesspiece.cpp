@@ -215,7 +215,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     }
 
 
-    setZValue(0);
+    setZValue(1);
     cachedMoves.clear();
     setSelectedState(false);
     if (promoted) {

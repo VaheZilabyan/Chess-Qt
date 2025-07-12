@@ -13,13 +13,15 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     chesspiece.cpp \
-    promotiondialog.cpp
+    promotiondialog.cpp \
+    settingswindow.cpp
 
 HEADERS += \
     board.h \
     mainwindow.h \
     chesspiece.h \
-    promotiondialog.h
+    promotiondialog.h \
+    settingswindow.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

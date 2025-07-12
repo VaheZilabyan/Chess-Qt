@@ -27,6 +27,8 @@ public:
     bool hasMovedAlready() const { return hasMoved; }
     void markAsMoved() { hasMoved = true; }
 
+    static void setSelectedPiece(ChessPiece* sp) { selectedPiece = sp; }
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;

@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "chesspiece.h"
+#include "settingswindow.h"
 #include "board.h"
 
 #include <QLayout>
@@ -9,6 +10,7 @@
 #include <QGraphicsItem>
 #include <QPixmap>
 #include <QLabel>
+#include <QMenuBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -75,6 +77,16 @@ MainWindow::MainWindow(QWidget *parent)
     board->setupInitialPosition();
     setCentralWidget(centralWidget);
 
+    QMenu* playMenu = menuBar()->addMenu("Play");
+    QMenu* settingsMenu = menuBar()->addMenu("Settings");
+    QAction* newGameAction = new QAction("New Game", this);
+    QAction* settingsAction = new QAction("Edit...", this);
+    playMenu->addAction(newGameAction);
+    settingsMenu->addAction(settingsAction);
+
+    connect(newGameAction, &QAction::triggered, this, &MainWindow::onNewGameClicked);
+    connect(settingsAction, &QAction::triggered, this, &MainWindow::onChangeBoardClicked);
+
     connect(board, &Board::pieceCaptured, this, &MainWindow::onPieceCaptured);
     connect(board, &Board::addMoveSignal, this, &MainWindow::onAddMove);
 }
@@ -117,6 +129,23 @@ void MainWindow::onAddMove(ChessPiece *piece, QPoint from, QPoint to)
     historyWidget->setItem(row, 1, new QTableWidgetItem(fromX + fromY + "-" + toX + toY));
 
     historyWidget->scrollToItem(historyWidget->item(row, 0));
+}
+
+void MainWindow::onNewGameClicked()
+{
+    // Reset board, clear move history, etc.
+    qDebug() << "Starting new game...";
+
+    whiteGraveScene->clear();
+    blackGraveScene->clear();
+    Board::getInstance()->resetBoard();      // You need to implement this
+    historyWidget->setRowCount(0);           // Clear move history
+}
+
+void MainWindow::onChangeBoardClicked()
+{
+    SettingsWindow setting(this);
+    setting.exec(); // Modal, blocks until user closes the dialog
 }
 
 QString MainWindow::getPieceNameStr(ChessPiece *piece)
