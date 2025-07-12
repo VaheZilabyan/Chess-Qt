@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "chesspiece.h"
+#include "chessclock.h"
 
 #include <QMainWindow>
 #include <QGraphicsView>
@@ -34,5 +35,6 @@ private:
     QGraphicsScene* whiteGraveScene;
     QGraphicsScene* blackGraveScene;
     QTableWidget *historyWidget;
+    ChessClock *clock;
 };
 #endif // MAINWINDOW_H

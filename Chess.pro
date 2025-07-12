@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     board.cpp \
+    chessclock.cpp \
     main.cpp \
     mainwindow.cpp \
     chesspiece.cpp \
@@ -18,6 +19,7 @@ SOURCES += \
 
 HEADERS += \
     board.h \
+    chessclock.h \
     mainwindow.h \
     chesspiece.h \
     promotiondialog.h \

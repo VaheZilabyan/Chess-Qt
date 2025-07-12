@@ -449,6 +449,12 @@ bool Board::isCorrectTurn(ChessPiece* piece) const {
 
 void Board::switchTurn() {
     currentTurn = (currentTurn == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
+    if (clock) {
+        if (currentTurn == ChessPiece::White)
+            clock->startWhite();
+        else
+            clock->startBlack();
+    }
 }
 
 bool Board::isEmpty(int x, int y) const

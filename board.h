@@ -2,6 +2,7 @@
 #define BOARD_H
 
 #include "chesspiece.h"
+#include "chessclock.h"
 
 #include <QGraphicsScene>
 #include <QObject>
@@ -64,6 +65,7 @@ public:
     }
 
     void setBoardColor(QPair<QColor, QColor> bc);
+    void setClock(ChessClock* clock) { this->clock = clock; }
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
@@ -91,6 +93,7 @@ private:
     QPoint blackKingPos = {4, 0};
 
     QPair<QColor, QColor> boardColor = {Qt::white, Qt::gray};
+    ChessClock *clock;
 
 signals:
     void pieceCaptured(ChessPiece* piece);  // фигура, которую убили

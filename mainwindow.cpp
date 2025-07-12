@@ -2,6 +2,7 @@
 #include "chesspiece.h"
 #include "settingswindow.h"
 #include "board.h"
+#include "chessclock.h"
 
 #include <QLayout>
 #include <QPushButton>
@@ -23,13 +24,8 @@ MainWindow::MainWindow(QWidget *parent)
     QWidget *centralWidget = new QWidget(this);
     QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
 
-    /*QPushButton *startButton = new QPushButton("Player vs Player");
-    QPushButton *settingsButton = new QPushButton("Settings");
-    QPushButton *exitButton = new QPushButton("Exit");
-
-    mainLayout->addWidget(startButton);
-    mainLayout->addWidget(settingsButton);
-    mainLayout->addWidget(exitButton);*/
+    clock = new ChessClock(this);
+    clock->reset(5 * 60);  // 5 минут
 
     QGraphicsView *graphicsView = new QGraphicsView(this);
     graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -63,9 +59,11 @@ MainWindow::MainWindow(QWidget *parent)
     historyWidget->setColumnWidth(1, 122);
     historyWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+    graveLayout->addWidget(clock->getBlackDisplay());
     graveLayout->addWidget(whiteGraveView);
     graveLayout->addWidget(historyWidget);
     graveLayout->addWidget(blackGraveView);
+    graveLayout->addWidget(clock->getWhiteDisplay());
 
     mainLayout->addWidget(graveWidget);
 
@@ -75,6 +73,8 @@ MainWindow::MainWindow(QWidget *parent)
     Board *board = Board::getInstance();
     board->setScene(scene);
     board->setupInitialPosition();
+    board->setClock(clock);
+
     setCentralWidget(centralWidget);
 
     QMenu* playMenu = menuBar()->addMenu("Play");
@@ -140,6 +140,7 @@ void MainWindow::onNewGameClicked()
     blackGraveScene->clear();
     Board::getInstance()->resetBoard();      // You need to implement this
     historyWidget->setRowCount(0);           // Clear move history
+    clock->reset(5 * 60);
 }
 
 void MainWindow::onChangeBoardClicked()
