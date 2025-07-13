@@ -12,6 +12,7 @@
 #include <QPixmap>
 #include <QLabel>
 #include <QMenuBar>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -41,12 +42,12 @@ MainWindow::MainWindow(QWidget *parent)
     blackGraveScene = new QGraphicsScene(this);
 
     whiteGraveView->setScene(whiteGraveScene);
-    whiteGraveView->setFixedSize(8 * Board::tileSize / 2, 100);
+    whiteGraveView->setFixedHeight(100);
     whiteGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     whiteGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     blackGraveView->setScene(blackGraveScene);
-    blackGraveView->setFixedSize(8 * Board::tileSize / 2, 100);
+    blackGraveView->setFixedHeight(100);
     blackGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     blackGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -67,8 +68,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     mainLayout->addWidget(graveWidget);
 
-    scene->setSceneRect(-12, -12, 690, 690); //
-    graphicsView->setFixedSize(550, 550); // need to scene size == view size
+    int boardSize = Board::tileSize * 8;
+    scene->setSceneRect(0, 0, boardSize, boardSize); // 0,0 to 640,640
+    graphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    graphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    int viewSize = boardSize + 2 * graphicsView->frameWidth();
+    graphicsView->setFixedSize(viewSize, viewSize);
 
     Board *board = Board::getInstance();
     board->setScene(scene);
@@ -89,6 +94,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(board, &Board::pieceCaptured, this, &MainWindow::onPieceCaptured);
     connect(board, &Board::addMoveSignal, this, &MainWindow::onAddMove);
+    connect(clock, &ChessClock::timeOut, this, &MainWindow::timeOverSlot);
 }
 
 MainWindow::~MainWindow() {}
@@ -147,6 +153,13 @@ void MainWindow::onChangeBoardClicked()
 {
     SettingsWindow setting(this);
     setting.exec(); // Modal, blocks until user closes the dialog
+}
+
+void MainWindow::timeOverSlot(const QString& player)
+{
+    QString winner = (player == "White") ? "Black" : "White";
+    QMessageBox::information(this, "Time Over", winner + " wins by timeout!");
+    onNewGameClicked();
 }
 
 QString MainWindow::getPieceNameStr(ChessPiece *piece)

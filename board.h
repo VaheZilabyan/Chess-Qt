@@ -44,6 +44,7 @@ public:
     void movePiece(ChessPiece* piece, int x, int y);
 
     void setScene(QGraphicsScene *s) { this->scene = s; }
+    QGraphicsScene* getScene() const { return scene; }
 
     static constexpr int tileSize = 65;
 
@@ -66,6 +67,7 @@ public:
 
     void setBoardColor(QPair<QColor, QColor> bc);
     void setClock(ChessClock* clock) { this->clock = clock; }
+    ChessClock* getClock() const { return clock; }
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }

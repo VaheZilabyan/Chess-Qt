@@ -38,6 +38,7 @@ ChessClock::ChessClock(QWidget *parent)
         if (blackSeconds <= 0) {
             blackTimer->stop();
             emit timeOut("Black");
+            //QMessageBox::information(this, "Время!", "Чёрные проиграли по времени");
         }
     });
 }

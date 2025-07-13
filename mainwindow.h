@@ -22,6 +22,7 @@ private slots:
     void onAddMove(ChessPiece* piece, QPoint from, QPoint to);
     void onNewGameClicked();
     void onChangeBoardClicked();
+    void timeOverSlot(const QString &player);
 
 private:
     QString getPieceNameStr(ChessPiece*);

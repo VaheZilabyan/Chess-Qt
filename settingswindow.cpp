@@ -35,6 +35,15 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     pieceLayout->addWidget(changePieceLabel);
     pieceLayout->addWidget(pieceComboBox);
 
+    //timer
+    timeEdit = new QTimeEdit(this);
+    QLabel *timerLabel = new QLabel("Change Timer");
+    timeEdit->setDisplayFormat("mm:ss");
+    timeEdit->setTime(QTime(0, 5, 0));
+    QHBoxLayout *timerLayout = new QHBoxLayout;
+    timerLayout->addWidget(timerLabel);
+    timerLayout->addWidget(timeEdit);
+
     // On/Off sound
     soundCheckBox = new QCheckBox("Sound");
     soundCheckBox->setChecked(true);
@@ -47,6 +56,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     // Add all to main layout
     mainLayout->addLayout(boardLayout);
     mainLayout->addLayout(pieceLayout);
+    mainLayout->addLayout(timerLayout);
     mainLayout->addWidget(soundCheckBox);
     mainLayout->addWidget(buttonBox);
 
@@ -69,8 +79,12 @@ void SettingsWindow::accept()
     } else if (color == "Gray/Dark Gray") {
         boardColor = {"#c6c7c5", "#8f918d"};
     }
-
     Board::getInstance()->setBoardColor(boardColor);
+
+    QTime selectedTime = timeEdit->time();
+    int totalSeconds = QTime(0, 0).secsTo(selectedTime);
+    Board::getInstance()->getClock()->reset(totalSeconds);
+
     qDebug() << "acceped";
 }
 

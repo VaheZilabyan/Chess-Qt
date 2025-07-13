@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QComboBox>
 #include <QCheckBox>
+#include <QTimeEdit>
 
 class SettingsWindow : public QDialog
 {
@@ -15,6 +16,7 @@ public slots:
 private:
     QComboBox *boardComboBox;
     QCheckBox *soundCheckBox;
+    QTimeEdit *timeEdit;
 };
 
 
