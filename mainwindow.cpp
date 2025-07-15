@@ -42,12 +42,12 @@ MainWindow::MainWindow(QWidget *parent)
     blackGraveScene = new QGraphicsScene(this);
 
     whiteGraveView->setScene(whiteGraveScene);
-    whiteGraveView->setFixedHeight(100);
+    whiteGraveView->setFixedHeight(80);
     whiteGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     whiteGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     blackGraveView->setScene(blackGraveScene);
-    blackGraveView->setFixedHeight(100);
+    blackGraveView->setFixedHeight(80);
     blackGraveView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     blackGraveView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 

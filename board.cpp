@@ -494,12 +494,12 @@ void Board::capturePiece(int x, int y)
 
 }
 
-void Board::movePiece(ChessPiece *piece, int x, int y)
+void Board::movePiece(ChessPiece *piece, QPoint from, QPoint to)
 {
-    QPoint from = piece->getPositionFromBoard();
-
+    int x = to.x();
+    int y = to.y();
     pieces[y][x] = piece;
-    piece->setPositionOnTheBoard(QPoint(x, y));
+    piece->setPositionOnTheBoard(to);
     piece->setPos(x * Board::tileSize, y * Board::tileSize);
 
     pieces[from.y()][from.x()] = nullptr;

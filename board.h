@@ -42,7 +42,7 @@ public:
     bool isEnemy(int, int, ChessPiece::Color) const;
 
     void capturePiece(int x, int y);
-    void movePiece(ChessPiece* piece, int x, int y);
+    void movePiece(ChessPiece* piece, QPoint from, QPoint to);
 
     void setScene(QGraphicsScene *s) { this->scene = s; }
     QGraphicsScene* getScene() const { return scene; }

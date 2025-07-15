@@ -143,7 +143,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             if (newBoardPos == QPoint(6, row)) {
                 ChessPiece* rook = board->pieceAt(7, row);
                 if (rook) {
-                    board->movePiece(rook, 5, row); // h1 → f1
+                    board->movePiece(rook, oldBoardPos, QPoint(5, row)); // h1 → f1
                 }
             }
 
@@ -151,7 +151,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             if (newBoardPos == QPoint(2, row)) {
                 ChessPiece* rook = board->pieceAt(0, row);
                 if (rook) {
-                    board->movePiece(rook, 3, row); // a1 → d1
+                    board->movePiece(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
                 }
             }
             board->playCastleSound();
@@ -192,7 +192,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         }
 
         ChessPiece *currentPiece = (promoted == nullptr) ? this : promoted;
-        board->movePiece(currentPiece, x, y);
+        board->movePiece(currentPiece, oldBoardPos, newBoardPos);
         //newPiece->setPos(x * Board::tileSize, y * Board::tileSize);
 
         // Удаляем старую пешку, если промоция
