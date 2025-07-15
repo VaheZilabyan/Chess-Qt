@@ -551,7 +551,7 @@ bool Board::isSquareAttacked(QPoint pos, ChessPiece::Color byColor) const
     for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
             ChessPiece* piece = pieces[y][x];
-            if (piece && piece->getColor() != byColor) {
+            if (piece && piece->getColor() != byColor && piece->getType() != ChessPiece::PieceType::King) {
                 QList<QPoint> attacks = availableMoves(piece); // Без фильтрации по шаху
                 if (attacks.contains(pos)) {
                     return true;
@@ -570,7 +570,7 @@ bool Board::isKingInCheck(ChessPiece::Color color)
     for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
             ChessPiece* piece = pieces[y][x];
-            if (piece && piece->getColor() != color) {
+            if (piece && piece->getColor() != color && piece->getType() != ChessPiece::PieceType::King) {
                 QList<QPoint> enemyMoves = availableMoves(piece);
                 if (enemyMoves.contains(kingPos)) {
                     return true;
@@ -591,7 +591,7 @@ bool Board::isCheckmate(ChessPiece::Color color)
     for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
             ChessPiece* piece = pieces[y][x];
-            if (piece && piece->getColor() == color) {
+            if (piece && piece->getColor() == color && piece->getType() != ChessPiece::PieceType::King) {
                 QList<QPoint> moves = legalMoves(piece);
                 if (!moves.isEmpty()) {
                     return false; // хоть один ход есть → не мат

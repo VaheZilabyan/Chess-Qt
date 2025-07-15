@@ -205,18 +205,18 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         ChessPiece::Color opponentColor = (getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
         if (board->isKingInCheck(opponentColor)) {
             qDebug() << "Шах!";
-            board->playCheckSound();
+            if (!soundPlayed) board->playCheckSound();
             soundPlayed = true;
         }
         if (board->isCheckmate(opponentColor)) {
             qDebug() << "♚♛ МАТ!";
             QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
-            board->playCheckSound();
+            if (!soundPlayed) board->playCheckSound();
             soundPlayed = true;
         } else if (board->isStalemate(opponentColor)) {
             qDebug() << "🤝 ПАТ!";
             QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
-            board->playDrawSound();
+            if (!soundPlayed) board->playDrawSound();
             soundPlayed = true;
         }
 
