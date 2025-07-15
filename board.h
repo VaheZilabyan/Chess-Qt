@@ -6,13 +6,14 @@
 
 #include <QGraphicsScene>
 #include <QObject>
-//#include <QSoundEffect>
+#include <QSoundEffect>
 
 // Singleton class
 class Board : public QObject {
     Q_OBJECT
     explicit Board(QObject* parent = nullptr) : QObject(parent) {
         // private constructor
+        setupSounds();
     }
 public:
     Board(const Board&) = delete;
@@ -69,21 +70,29 @@ public:
     void setClock(ChessClock* clock) { this->clock = clock; }
     ChessClock* getClock() const { return clock; }
 
+    void playCaptureSound();
+    void playCastleSound();
+    void playCheckSound();
+    void playDrawSound();
+    void playStartSound();
+    void playMoveSound();
+    void playPromoteSound();
+    void playTenSecondSound();
+
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
     QString getSvgPath(ChessPiece::PieceType type, ChessPiece::Color color);
 
 private:
-    /*QSoundEffect moveSound;
     QSoundEffect captureSound;
+    QSoundEffect castleSound;
     QSoundEffect checkSound;
+    QSoundEffect drawSound;
+    QSoundEffect startSound;
+    QSoundEffect moveSound;
     QSoundEffect promoteSound;
-
+    QSoundEffect tenSecondSound;
     void setupSounds();
-    void playMoveSound();
-    void playCaptureSound();
-    void playCheckSound();
-    void playPromoteSound();*/
 
     ChessPiece *pieces[8][8] = {};
     QGraphicsScene *scene = nullptr;

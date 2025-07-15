@@ -15,14 +15,14 @@
     </qresource>
 
     <qresource prefix="/chess_sounds">
-        <file>sounds/capture.mp3</file>
-        <file>sounds/castle.mp3</file>
-        <file>sounds/check.mp3</file>
-        <file>sounds/game-draw.mp3</file>
-	<file>sounds/game-start.mp3</file>
-	<file>sounds/move.mp3</file>
-	<file>sounds/promote.mp3</file>
-	<file>sounds/tenseconds.mp3</file>
+        <file>sounds/castle.wav</file>
+        <file>sounds/check.wav</file>
+        <file>sounds/game-draw.wav</file>
+	<file>sounds/game-start.wav</file>
+	<file>sounds/move.wav</file>
+	<file>sounds/promote.wav</file>
+	<file>sounds/tenseconds.wav</file>
+	<file>sounds/capture.wav</file>
     </qresource>
 
     <qresource prefix="/board_colors">

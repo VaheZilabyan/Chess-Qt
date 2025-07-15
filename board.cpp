@@ -72,6 +72,7 @@ void Board::resetBoard()    //calls for new game
 }
 
 void Board::setupBoard() {
+    playStartSound();
     // Перед перерисовкой доски:
     for (QGraphicsItem* item : scene->items()) {
         // Удаляем только клетки (те, у кого ZValue == 0)
@@ -626,4 +627,88 @@ bool Board::isStalemate(ChessPiece::Color color)
 void Board::setBoardColor(QPair<QColor, QColor> bc) {
     boardColor = bc;
     setupBoard();
+}
+
+
+void Board::setupSounds() {
+    captureSound.setSource(QUrl("qrc:/chess_sounds/sounds/capture.wav"));
+    captureSound.setVolume(0.5);
+
+    castleSound.setSource(QUrl("qrc:/chess_sounds/sounds/castle.wav"));
+    castleSound.setVolume(0.5);
+
+    checkSound.setSource(QUrl("qrc:/chess_sounds/sounds/check.wav"));
+    checkSound.setVolume(0.5);
+
+    drawSound.setSource(QUrl("qrc:/chess_sounds/sounds/game-draw.wav"));
+    drawSound.setVolume(0.5);
+
+    startSound.setSource(QUrl("qrc:/chess_sounds/sounds/game-start.wav"));
+    startSound.setVolume(0.5);
+
+    moveSound.setSource(QUrl("qrc:/chess_sounds/sounds/move.wav"));
+    moveSound.setVolume(0.5);
+
+    promoteSound.setSource(QUrl("qrc:/chess_sounds/sounds/promote.wav"));
+    promoteSound.setVolume(0.5);
+
+    tenSecondSound.setSource(QUrl("qrc:/chess_sounds/sounds/tenseconds.wav"));
+    tenSecondSound.setVolume(0.5);
+}
+
+void Board::playCaptureSound() {
+    if (captureSound.isLoaded()) {
+        captureSound.play();
+    } else {
+        qDebug() << "Capture sound not loaded yet!";
+    }
+}
+void Board::playCastleSound() {
+    if (castleSound.isLoaded()) {
+        castleSound.play();
+    } else {
+        qDebug() << "Castle sound not loaded";
+    }
+}
+void Board::playCheckSound() {
+    if (checkSound.isLoaded()) {
+        checkSound.play();
+    } else {
+        qDebug() << "Check sound not loaded";
+    }
+}
+void Board::playDrawSound() {
+    if (drawSound.isLoaded()) {
+        drawSound.play();
+    } else {
+        qDebug() << "Draw sound not loaded";
+    }
+}
+void Board::playStartSound() {
+    if (startSound.isLoaded()) {
+        startSound.play();
+    } else {
+        qDebug() << "Start sound not loaded";
+    }
+}
+void Board::playMoveSound() {
+    if (moveSound.isLoaded()) {
+        moveSound.play();
+    } else {
+        qDebug() << "Move sound not loaded";
+    }
+}
+void Board::playPromoteSound() {
+    if (promoteSound.isLoaded()) {
+        promoteSound.play();
+    } else {
+        qDebug() << "Promote sound not loaded";
+    }
+}
+void Board::playTenSecondSound() {
+    if (tenSecondSound.isLoaded()) {
+        tenSecondSound.play();
+    } else {
+        qDebug() << "Ten seconds sound not loaded";
+    }
 }

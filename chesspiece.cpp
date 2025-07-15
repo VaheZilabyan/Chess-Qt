@@ -9,6 +9,8 @@
 #include <QFile>
 #include <QMessageBox>
 
+#include <QSoundEffect>
+
 ChessPiece* ChessPiece::selectedPiece = nullptr;
 
 ChessPiece::ChessPiece(PieceType type, Color color, const QString& svgPath)
@@ -128,6 +130,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     QPoint newBoardPos(x, y);
 
     bool moveAllowed = false;
+    bool soundPlayed = false;
     ChessPiece *promoted = nullptr;
 
     if (cachedMoves.contains(newBoardPos)) {
@@ -151,11 +154,15 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
                     board->movePiece(rook, 3, row); // a1 → d1
                 }
             }
+            board->playCastleSound();
+            soundPlayed = true;
         }
 
         // Попытка захвата вражеской фигуры
         if (board->isEnemy(x, y, this->getColor())) {
             board->capturePiece(x, y);  // 👈 Удаляет и заносит в список убитых
+            board->playCaptureSound();
+            soundPlayed = true;
         }
 
         // En Passant - взятие на проходе
@@ -163,6 +170,8 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             int dy = (getColor() == ChessPiece::White) ? 1 : -1;
             QPoint enemyPos(newBoardPos.x(), newBoardPos.y() + dy);
             board->capturePiece(enemyPos.x(), enemyPos.y());
+            board->playCaptureSound();
+            soundPlayed = true;
         }
 
         // Pawn Promotion
@@ -176,6 +185,8 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
                     ChessPiece::PieceType promotedType = dialog.getSelectedPieceType();
                     qDebug() << "pawn become to " << promotedType;
                     promoted = board->pawnPromotion(promotedType, color);
+                    board->playPromoteSound();
+                    soundPlayed = true;
                 }
             }
         }
@@ -194,17 +205,25 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         ChessPiece::Color opponentColor = (getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
         if (board->isKingInCheck(opponentColor)) {
             qDebug() << "Шах!";
+            board->playCheckSound();
+            soundPlayed = true;
         }
         if (board->isCheckmate(opponentColor)) {
             qDebug() << "♚♛ МАТ!";
             QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
+            board->playCheckSound();
+            soundPlayed = true;
         } else if (board->isStalemate(opponentColor)) {
             qDebug() << "🤝 ПАТ!";
             QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
+            board->playDrawSound();
+            soundPlayed = true;
         }
 
         //need to add in historyMove
         board->addMoveHistory(currentPiece, oldBoardPos, newBoardPos);
+
+        if (!soundPlayed) board->playMoveSound();
 
         Board::getInstance()->switchTurn();
     } else {

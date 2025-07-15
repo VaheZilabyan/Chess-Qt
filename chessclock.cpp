@@ -1,4 +1,5 @@
 #include "ChessClock.h"
+#include "board.h"
 #include <QMessageBox>
 
 ChessClock::ChessClock(QWidget *parent)
@@ -26,6 +27,9 @@ ChessClock::ChessClock(QWidget *parent)
     connect(whiteTimer, &QTimer::timeout, this, [=]() {
         whiteSeconds--;
         whiteDisplay->display(formatTime(whiteSeconds));
+        if (whiteSeconds <= 10) {
+            Board::getInstance()->playTenSecondSound();
+        }
         if (whiteSeconds <= 0) {
             whiteTimer->stop();
             emit timeOut("White");
@@ -35,6 +39,9 @@ ChessClock::ChessClock(QWidget *parent)
     connect(blackTimer, &QTimer::timeout, this, [=]() {
         blackSeconds--;
         blackDisplay->display(formatTime(blackSeconds));
+        if (blackSeconds <= 10) {
+            Board::getInstance()->playTenSecondSound();
+        }
         if (blackSeconds <= 0) {
             blackTimer->stop();
             emit timeOut("Black");
