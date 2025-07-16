@@ -133,56 +133,37 @@ QList<QPoint> Board::legalMoves(ChessPiece* piece)
     QPoint originalPos = piece->getPositionFromBoard();
     ChessPiece* originalTarget = nullptr;
 
-    if (piece->getType() == ChessPiece::King) {
-        for (const QPoint& move : moves) {
-            int x = move.x();
-            int y = move.y();
-
-            // Временный ход
-            originalTarget = pieces[y][x];
-            originalPos = piece->getPositionFromBoard();
-
-            pieces[originalPos.y()][originalPos.x()] = nullptr;
-            pieces[y][x] = piece;
-            piece->setPositionOnTheBoard(move);
-
-            // 👇 Новый: проверка, не атакуется ли поле
-            if (!isSquareAttacked(move, piece->getColor())) {
-                safeMoves.append(move);
-            }
-
-            // Откат
-            pieces[y][x] = originalTarget;
-            pieces[originalPos.y()][originalPos.x()] = piece;
-            piece->setPositionOnTheBoard(originalPos);
-        }
-
-        return safeMoves; // досрочно для короля
-    }
-
     for (const QPoint& move : moves) {
         int x = move.x();
         int y = move.y();
 
-        // --- Сохраняем состояние ---
+        // Сохраняем цель
         originalTarget = pieces[y][x];
+
+        // Двигаем фигуру
         pieces[originalPos.y()][originalPos.x()] = nullptr;
         pieces[y][x] = piece;
         piece->setPositionOnTheBoard(move);
 
-        // --- Проверка шаха ---
-        if (!isKingInCheck(piece->getColor())) {
-            safeMoves.append(move);
+        bool isSafe = false;
+        if (piece->getType() == ChessPiece::King) {
+            isSafe = !isSquareAttacked(move, piece->getColor());
+        } else {
+            isSafe = !isKingInCheck(piece->getColor());
         }
 
-        // --- Откат ---
-        pieces[originalPos.y()][originalPos.x()] = piece;
+        if (isSafe)
+            safeMoves.append(move);
+
+        // Откат
         pieces[y][x] = originalTarget;
+        pieces[originalPos.y()][originalPos.x()] = piece;
         piece->setPositionOnTheBoard(originalPos);
     }
 
     return safeMoves;
 }
+
 
 QList<QPoint> Board::rawAvailableMoves(ChessPiece* piece) const {
     QList<QPoint> moves;
@@ -602,7 +583,7 @@ bool Board::isKingInCheck(ChessPiece::Color color)
         for (int x = 0; x < 8; ++x) {
             ChessPiece* piece = pieces[y][x];
             if (piece && piece->getColor() != color) {
-                QList<QPoint> enemyMoves = availableMoves(piece);
+                QList<QPoint> enemyMoves = rawAvailableMoves(piece);
                 if (enemyMoves.contains(kingPos)) {
                     return true;
                 }

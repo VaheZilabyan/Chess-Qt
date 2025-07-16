@@ -142,7 +142,8 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             if (newBoardPos == QPoint(6, row)) {
                 ChessPiece* rook = board->pieceAt(7, row);
                 if (rook) {
-                    board->movePieceFromTo(rook, oldBoardPos, QPoint(5, row)); // h1 → f1
+                    board->movePiece(rook, 5, row); // h1 → f1
+                    //board->movePieceFromTo(rook, oldBoardPos, QPoint(5, row)); // h1 → f1
                 }
             }
 
@@ -150,7 +151,8 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             if (newBoardPos == QPoint(2, row)) {
                 ChessPiece* rook = board->pieceAt(0, row);
                 if (rook) {
-                    board->movePieceFromTo(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
+                    board->movePiece(rook, 3, row); // a1 → d1
+                    //board->movePieceFromTo(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
                 }
             }
             board->playCastleSound();
