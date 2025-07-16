@@ -15,7 +15,8 @@ SOURCES += \
     mainwindow.cpp \
     chesspiece.cpp \
     promotiondialog.cpp \
-    settingswindow.cpp
+    settingswindow.cpp \
+    stockfishengine.cpp
 
 HEADERS += \
     board.h \
@@ -23,7 +24,8 @@ HEADERS += \
     mainwindow.h \
     chesspiece.h \
     promotiondialog.h \
-    settingswindow.h
+    settingswindow.h \
+    stockfishengine.h
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

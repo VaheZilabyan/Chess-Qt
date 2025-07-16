@@ -3,7 +3,9 @@
 #include "settingswindow.h"
 #include "board.h"
 #include "chessclock.h"
+#include "stockfishengine.h"
 
+#include <QProcess>
 #include <QLayout>
 #include <QPushButton>
 #include <QGraphicsView>

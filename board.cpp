@@ -184,7 +184,7 @@ QList<QPoint> Board::legalMoves(ChessPiece* piece)
     return safeMoves;
 }
 
-QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
+QList<QPoint> Board::rawAvailableMoves(ChessPiece* piece) const {
     QList<QPoint> moves;
     ChessPiece::PieceType pieceType = piece->getType();
 
@@ -348,52 +348,54 @@ QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
         QPoint pos = piece->getPositionFromBoard();
         int x0 = pos.x();
         int y0 = pos.y();
-        //ChessPiece::Color color = piece->getColor();
 
         for (const QPoint& dir : kingDirs) {
             int x = x0 + dir.x();
             int y = y0 + dir.y();
 
-            if (isInsideBoard(x, y)) {
-                if (isEmpty(x, y) || isEnemy(x, y, piece->getColor())) {
-                    moves.append(QPoint(x, y));
-                }
+            if (isInsideBoard(x, y) &&
+                (isEmpty(x, y) || isEnemy(x, y, piece->getColor()))) {
+                moves.append(QPoint(x, y));
             }
         }
-        // castling add later
-        if (piece->getType() == ChessPiece::King && !piece->hasMovedAlready()) {
-            int row = (piece->getColor() == ChessPiece::White) ? 7 : 0;
-
-            // КОРОТКАЯ РОКИРОВКА (король вправо)
-            ChessPiece* rookShort = pieceAt(7, row);
-            if (rookShort && rookShort->getType() == ChessPiece::Rook &&
-                !rookShort->hasMovedAlready() &&
-                isEmpty(5, row) && isEmpty(6, row) &&
-                !isSquareAttacked(QPoint(4, row), piece->getColor()) &&
-                !isSquareAttacked(QPoint(5, row), piece->getColor()) &&
-                !isSquareAttacked(QPoint(6, row), piece->getColor())) {
-
-                moves.append(QPoint(6, row)); // Король пойдёт на g1/g8
-            }
-
-            // ДЛИННАЯ РОКИРОВКА (король влево)
-            ChessPiece* rookLong = pieceAt(0, row);
-            if (rookLong && rookLong->getType() == ChessPiece::Rook &&
-                !rookLong->hasMovedAlready() &&
-                isEmpty(1, row) && isEmpty(2, row) && isEmpty(3, row) &&
-                !isSquareAttacked(QPoint(4, row), piece->getColor()) &&
-                !isSquareAttacked(QPoint(3, row), piece->getColor()) &&
-                !isSquareAttacked(QPoint(2, row), piece->getColor())) {
-
-                moves.append(QPoint(2, row)); // Король пойдёт на c1/c8
-            }
-        }
-
 
         break;
     }
     }
 
+    return moves;
+}
+
+QList<QPoint> Board::availableMoves(ChessPiece* piece) const {
+    QList<QPoint> moves = rawAvailableMoves(piece);
+
+    if (piece->getType() == ChessPiece::King && !piece->hasMovedAlready()) {
+        int row = (piece->getColor() == ChessPiece::White) ? 7 : 0;
+
+        // короткая рокировка
+        ChessPiece* rookShort = pieceAt(7, row);
+        if (rookShort && rookShort->getType() == ChessPiece::Rook &&
+            !rookShort->hasMovedAlready() &&
+            isEmpty(5, row) && isEmpty(6, row) &&
+            !isSquareAttacked(QPoint(4, row), piece->getColor()) &&
+            !isSquareAttacked(QPoint(5, row), piece->getColor()) &&
+            !isSquareAttacked(QPoint(6, row), piece->getColor())) {
+            moves.append(QPoint(6, row));
+        }
+
+        // длинная рокировка
+        ChessPiece* rookLong = pieceAt(0, row);
+        if (rookLong && rookLong->getType() == ChessPiece::Rook &&
+            !rookLong->hasMovedAlready() &&
+            isEmpty(1, row) && isEmpty(2, row) && isEmpty(3, row) &&
+            !isSquareAttacked(QPoint(4, row), piece->getColor()) &&
+            !isSquareAttacked(QPoint(3, row), piece->getColor()) &&
+            !isSquareAttacked(QPoint(2, row), piece->getColor())) {
+            moves.append(QPoint(2, row));
+        }
+    }
+
+    // здесь можешь ещё фильтровать ходы на шах для других фигур, если надо
     return moves;
 }
 
@@ -494,7 +496,36 @@ void Board::capturePiece(int x, int y)
 
 }
 
-void Board::movePiece(ChessPiece *piece, QPoint from, QPoint to)
+void Board::movePiece(ChessPiece *piece, int x, int y) {
+    QPoint from = piece->getPositionFromBoard();
+    pieces[y][x] = piece;
+    piece->setPositionOnTheBoard(QPoint(x, y));
+    piece->setPos(x * Board::tileSize, y * Board::tileSize);
+
+    pieces[from.y()][from.x()] = nullptr;
+
+    // En Passant логика:
+    if (piece->getType() == ChessPiece::Pawn &&
+        abs(y - from.y()) == 2) {
+        int dir = (piece->getColor() == ChessPiece::White) ? 1 : -1;
+        enPassantTarget = QPoint(x, y + dir);
+    } else {
+        enPassantTarget = {-1, -1}; // сбрасываем, если не 2-клеточный ход пешки
+    }
+
+    if (piece->getType() == ChessPiece::King) {
+        if (piece->getColor() == ChessPiece::White)
+            whiteKingPos = QPoint(x, y);
+        else
+            blackKingPos = QPoint(x, y);
+    }
+
+    if (piece->getType() == ChessPiece::King || piece->getType() == ChessPiece::Rook) {
+        piece->markAsMoved();
+    }
+}
+
+void Board::movePieceFromTo(ChessPiece *piece, QPoint from, QPoint to)
 {
     int x = to.x();
     int y = to.y();
@@ -551,8 +582,8 @@ bool Board::isSquareAttacked(QPoint pos, ChessPiece::Color byColor) const
     for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
             ChessPiece* piece = pieces[y][x];
-            if (piece && piece->getColor() != byColor && piece->getType() != ChessPiece::PieceType::King) {
-                QList<QPoint> attacks = availableMoves(piece); // Без фильтрации по шаху
+            if (piece && piece->getColor() != byColor) {
+                QList<QPoint> attacks = rawAvailableMoves(piece); // Без фильтрации по шаху
                 if (attacks.contains(pos)) {
                     return true;
                 }
@@ -570,7 +601,7 @@ bool Board::isKingInCheck(ChessPiece::Color color)
     for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
             ChessPiece* piece = pieces[y][x];
-            if (piece && piece->getColor() != color && piece->getType() != ChessPiece::PieceType::King) {
+            if (piece && piece->getColor() != color) {
                 QList<QPoint> enemyMoves = availableMoves(piece);
                 if (enemyMoves.contains(kingPos)) {
                     return true;
@@ -591,7 +622,7 @@ bool Board::isCheckmate(ChessPiece::Color color)
     for (int y = 0; y < 8; ++y) {
         for (int x = 0; x < 8; ++x) {
             ChessPiece* piece = pieces[y][x];
-            if (piece && piece->getColor() == color && piece->getType() != ChessPiece::PieceType::King) {
+            if (piece && piece->getColor() == color) {
                 QList<QPoint> moves = legalMoves(piece);
                 if (!moves.isEmpty()) {
                     return false; // хоть один ход есть → не мат
@@ -712,3 +743,81 @@ void Board::playTenSecondSound() {
         qDebug() << "Ten seconds sound not loaded";
     }
 }
+
+void Board::onBestMoveReceived(const QString& move) {
+    qDebug() << "Stockfish move:" << move;
+
+    if (move.length() < 4) {
+        qWarning() << "Некорректный формат хода:" << move;
+        return;
+    }
+
+    int fromX = move[0].toLatin1() - 'a';
+    int fromY = 8 - (move[1].toLatin1() - '0');
+    int toX = move[2].toLatin1() - 'a';
+    int toY = 8 - (move[3].toLatin1() - '0');
+
+    QPoint from(fromX, fromY);
+    QPoint to(toX, toY);
+
+    ChessPiece* piece = pieceAt(fromX, fromY);
+    if (!piece) {
+        qWarning() << "❌ Stockfish ссылается на пустую клетку:" << from;
+        return;
+    }
+
+    // Захват фигуры
+    if (isEnemy(toX, toY, piece->getColor())) {
+        capturePiece(toX, toY);
+    }
+
+    // Переместить фигуру
+    pieces[fromX][fromY] = nullptr;
+    movePiece(piece, toX, toY);
+    piece->setPositionOnTheBoard(to);
+    piece->setPos(toX * tileSize, toY * tileSize);
+
+    // Проверка рокировки
+    if (piece->getType() == ChessPiece::PieceType::King && abs(toX - fromX) == 2) {
+        // Короткая рокировка (g1 или g8)
+        if (toX == 6) {
+            int rookFromX = 7;
+            int rookToX = 5;
+            int rookY = fromY;
+            ChessPiece* rook = pieceAt(rookFromX, rookY);
+            if (rook) {
+                pieces[rookFromX][rookY] = nullptr;
+                movePiece(rook, rookToX, rookY);
+                rook->setPositionOnTheBoard(QPoint(rookToX, rookY));
+                rook->setPos(rookToX * tileSize, rookY * tileSize);
+                qDebug() << "Короткая рокировка выполнена";
+            }
+        }
+        // Длинная рокировка (c1 или c8)
+        else if (toX == 2) {
+            int rookFromX = 0;
+            int rookToX = 3;
+            int rookY = fromY;
+            ChessPiece* rook = pieceAt(rookFromX, rookY);
+            if (rook) {
+                pieces[rookFromX][rookY] = nullptr;
+                movePiece(rook, rookToX, rookY);
+                rook->setPositionOnTheBoard(QPoint(rookToX, rookY));
+                rook->setPos(rookToX * tileSize, rookY * tileSize);
+                qDebug() << "Длинная рокировка выполнена";
+            }
+        }
+    }
+
+    // Добавляем ход Stockfish в историю
+    moveHistory.append(move);
+
+    // Отправляем обновлённую позицию обратно движку
+    QString moves = moveHistory.join(" ");
+    engine->sendCommand("position startpos moves " + moves);
+    //engine->sendCommand("go movetime 2000");
+
+    switchTurn();
+}
+
+

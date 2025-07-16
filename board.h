@@ -3,6 +3,7 @@
 
 #include "chesspiece.h"
 #include "chessclock.h"
+#include "stockfishengine.h"
 
 #include <QGraphicsScene>
 #include <QObject>
@@ -14,7 +15,12 @@ class Board : public QObject {
     explicit Board(QObject* parent = nullptr) : QObject(parent) {
         // private constructor
         setupSounds();
+        engine = new StockfishEngine(this);
+        connect(engine, &StockfishEngine::bestMoveReceived, this, &Board::onBestMoveReceived);
     }
+
+public slots:
+    void onBestMoveReceived(const QString& move);
 public:
     Board(const Board&) = delete;
     Board& operator=(const Board&) = delete;
@@ -34,6 +40,7 @@ public:
     // void makeMove(QPoint from, QPoint to);
 
     QList<QPoint> legalMoves(ChessPiece* piece);
+    QList<QPoint> rawAvailableMoves(ChessPiece* piece) const;
     QList<QPoint> availableMoves(ChessPiece* piece) const;       // return all aviable moves
     void showHints(const QList<QPoint>& moves);                 //  show aviable moves
     void clearHints();
@@ -42,7 +49,8 @@ public:
     bool isEnemy(int, int, ChessPiece::Color) const;
 
     void capturePiece(int x, int y);
-    void movePiece(ChessPiece* piece, QPoint from, QPoint to);
+    void movePieceFromTo(ChessPiece* piece, QPoint from, QPoint to);
+    void movePiece(ChessPiece *piece, int x, int y);
 
     void setScene(QGraphicsScene *s) { this->scene = s; }
     QGraphicsScene* getScene() const { return scene; }
@@ -79,11 +87,17 @@ public:
     void playPromoteSound();
     void playTenSecondSound();
 
+    void setEngine(StockfishEngine *e) { engine = e; }
+    StockfishEngine* getEngine() const { return engine; }
+    QStringList moveHistory;
+
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }
     QString getSvgPath(ChessPiece::PieceType type, ChessPiece::Color color);
 
 private:
+    StockfishEngine *engine;
+
     QSoundEffect captureSound;
     QSoundEffect castleSound;
     QSoundEffect checkSound;

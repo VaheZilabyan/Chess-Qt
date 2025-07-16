@@ -62,7 +62,6 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 
     position = toBoardCoord(event->scenePos()); //do the same
 
-    //cachedMoves  = Board::getInstance()->availableMoves(this);
     cachedMoves = board->legalMoves(this);
 
     board->showHints(cachedMoves );
@@ -143,7 +142,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             if (newBoardPos == QPoint(6, row)) {
                 ChessPiece* rook = board->pieceAt(7, row);
                 if (rook) {
-                    board->movePiece(rook, oldBoardPos, QPoint(5, row)); // h1 → f1
+                    board->movePieceFromTo(rook, oldBoardPos, QPoint(5, row)); // h1 → f1
                 }
             }
 
@@ -151,7 +150,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             if (newBoardPos == QPoint(2, row)) {
                 ChessPiece* rook = board->pieceAt(0, row);
                 if (rook) {
-                    board->movePiece(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
+                    board->movePieceFromTo(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
                 }
             }
             board->playCastleSound();
@@ -192,7 +191,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         }
 
         ChessPiece *currentPiece = (promoted == nullptr) ? this : promoted;
-        board->movePiece(currentPiece, oldBoardPos, newBoardPos);
+        board->movePieceFromTo(currentPiece, oldBoardPos, newBoardPos);
         //newPiece->setPos(x * Board::tileSize, y * Board::tileSize);
 
         // Удаляем старую пешку, если промоция
@@ -224,6 +223,25 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         board->addMoveHistory(currentPiece, oldBoardPos, newBoardPos);
 
         if (!soundPlayed) board->playMoveSound();
+
+        QString fromX = QString(QChar(97 + oldBoardPos.x()));
+        QString fromY = QString::number(8 - oldBoardPos.y());
+        QString toX = QString(QChar(97 + newBoardPos.x()));
+        QString toY = QString::number(8 - newBoardPos.y());
+        QString moveNotation = fromX + fromY + toX + toY;
+        qDebug() << "Move notation = " << moveNotation;
+
+        // Добавляем в историю
+        board->moveHistory.append(moveNotation);
+
+        // Отправляем движку всю историю
+        QString moves = board->moveHistory.join(" ");
+        board->getEngine()->sendCommand("position startpos moves " + moves);
+        //board->getEngine()->sendCommand("go movetime 2000");
+
+
+        //stockfish->write(QString("position startpos moves %1\n").arg(move).toUtf8());
+        //stockfish->write("go depth 18\n");  // Анализ на глубину 18 полуходов
 
         Board::getInstance()->switchTurn();
     } else {
