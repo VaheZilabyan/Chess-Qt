@@ -16,6 +16,7 @@ SOURCES += \
     chesspiece.cpp \
     promotiondialog.cpp \
     settingswindow.cpp \
+    sound.cpp \
     stockfishengine.cpp
 
 HEADERS += \
@@ -25,6 +26,7 @@ HEADERS += \
     chesspiece.h \
     promotiondialog.h \
     settingswindow.h \
+    sound.h \
     stockfishengine.h
 
 # Default rules for deployment.

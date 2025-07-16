@@ -7,14 +7,12 @@
 
 #include <QGraphicsScene>
 #include <QObject>
-#include <QSoundEffect>
 
 // Singleton class
 class Board : public QObject {
     Q_OBJECT
     explicit Board(QObject* parent = nullptr) : QObject(parent) {
         // private constructor
-        setupSounds();
         engine = new StockfishEngine(this);
         connect(engine, &StockfishEngine::bestMoveReceived, this, &Board::onBestMoveReceived);
     }
@@ -22,6 +20,8 @@ class Board : public QObject {
 public slots:
     void onBestMoveReceived(const QString& move);
 public:
+    static constexpr int tileSize = 65;
+
     Board(const Board&) = delete;
     Board& operator=(const Board&) = delete;
 
@@ -35,18 +35,18 @@ public:
     void setupInitialPosition();
     void addPiece(ChessPiece::PieceType type, ChessPiece::Color color, int x, int y);
 
-    ChessPiece* pieceAt(int x, int y) const;
-    bool isMoveValid(QPoint from, QPoint to) const;
-    // void makeMove(QPoint from, QPoint to);
+    ChessPiece* pieceAt(int x, int y) const;    //del
+    bool isMoveValid(QPoint from, QPoint to) const;    //del
 
-    QList<QPoint> legalMoves(ChessPiece* piece);
-    QList<QPoint> rawAvailableMoves(ChessPiece* piece) const;
-    QList<QPoint> availableMoves(ChessPiece* piece) const;       // return all aviable moves
-    void showHints(const QList<QPoint>& moves);                 //  show aviable moves
+    QList<QPoint> legalMoves(ChessPiece* piece);    //del
+    QList<QPoint> rawAvailableMoves(ChessPiece* piece) const;    //del
+    QList<QPoint> availableMoves(ChessPiece* piece) const;    //del
+
+    void showHints(const QList<QPoint>& moves);
     void clearHints();
 
-    bool isEmpty(int x, int y) const;
-    bool isEnemy(int, int, ChessPiece::Color) const;
+    bool isEmpty(int x, int y) const;    //del
+    bool isEnemy(int, int, ChessPiece::Color) const;    //del
 
     void capturePiece(int x, int y);
     void movePieceFromTo(ChessPiece* piece, QPoint from, QPoint to);
@@ -55,20 +55,18 @@ public:
     void setScene(QGraphicsScene *s) { this->scene = s; }
     QGraphicsScene* getScene() const { return scene; }
 
-    static constexpr int tileSize = 65;
-
     ChessPiece::Color currentTurn = ChessPiece::White;
 
-    bool isCorrectTurn(ChessPiece* piece) const;
-    void switchTurn();
+    bool isCorrectTurn(ChessPiece* piece) const;    //del
+    void switchTurn();    //del
 
     ChessPiece* pawnPromotion(ChessPiece::PieceType type, ChessPiece::Color color);
     QPoint getEnPassantTarget() const { return enPassantTarget; }
 
-    bool isKingInCheck(ChessPiece::Color color);
-    bool isSquareAttacked(QPoint pos, ChessPiece::Color byColor) const;
-    bool isCheckmate(ChessPiece::Color color);
-    bool isStalemate(ChessPiece::Color color);
+    bool isKingInCheck(ChessPiece::Color color);    //del
+    bool isSquareAttacked(QPoint pos, ChessPiece::Color byColor) const;    //del
+    bool isCheckmate(ChessPiece::Color color);    //del
+    bool isStalemate(ChessPiece::Color color);    //del
 
     void addMoveHistory(ChessPiece* piece, QPoint from, QPoint to) {
         emit addMoveSignal(piece, from, to);
@@ -77,15 +75,6 @@ public:
     void setBoardColor(QPair<QColor, QColor> bc);
     void setClock(ChessClock* clock) { this->clock = clock; }
     ChessClock* getClock() const { return clock; }
-
-    void playCaptureSound();
-    void playCastleSound();
-    void playCheckSound();
-    void playDrawSound();
-    void playStartSound();
-    void playMoveSound();
-    void playPromoteSound();
-    void playTenSecondSound();
 
     void setEngine(StockfishEngine *e) { engine = e; }
     StockfishEngine* getEngine() const { return engine; }
@@ -98,21 +87,9 @@ private: //helper methods
 private:
     StockfishEngine *engine;
 
-    QSoundEffect captureSound;
-    QSoundEffect castleSound;
-    QSoundEffect checkSound;
-    QSoundEffect drawSound;
-    QSoundEffect startSound;
-    QSoundEffect moveSound;
-    QSoundEffect promoteSound;
-    QSoundEffect tenSecondSound;
-    void setupSounds();
-
     ChessPiece *pieces[8][8] = {};
-    QGraphicsScene *scene = nullptr;
+    QGraphicsScene *scene = nullptr;    //keep this, delete scene from mainWindos
     QList<QGraphicsEllipseItem*> hintDots;
-    mutable QVector<ChessPiece*> killedWhitePieces;
-    mutable QVector<ChessPiece*> killedBlackPieces;
     QPoint enPassantTarget = {-1, -1};
     QPoint whiteKingPos = {4, 7};
     QPoint blackKingPos = {4, 0};

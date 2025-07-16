@@ -3,6 +3,8 @@
 
 #include "chesspiece.h"
 #include "chessclock.h"
+#include "board.h"
+#include "gamelogic.h"
 
 #include <QMainWindow>
 #include <QGraphicsView>
@@ -29,6 +31,8 @@ private:
 
     static constexpr int MIN_WIDTH = 840;
     static constexpr int MIN_HEIGHT = 600;
+
+    Board *board;
 
     QGraphicsScene *scene;
     QGraphicsView *whiteGraveView;

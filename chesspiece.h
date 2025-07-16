@@ -1,6 +1,8 @@
 #ifndef PIECE_H
 #define PIECE_H
 
+#include "sound.h"
+
 #include <QGraphicsSvgItem>
 #include <QGraphicsSceneMouseEvent>
 
@@ -11,19 +13,17 @@ public:
     enum PieceType { King, Queen, Rook, Bishop, Knight, Pawn };
     enum Color { White, Black };
 
-    ChessPiece();
     ChessPiece(PieceType type, Color color, const QString& svgPath);
 
+    QPoint getPositionFromBoard() const { return position; }
+    QString getSvgPath() const { return svgPath; }
     PieceType getType() const;
     Color getColor() const;
-    QString getSvgPath() const { return svgPath; }
 
+    void setPositionOnTheBoard(const QPoint& pos) { position = pos; }
     void setSelectedState(bool selected);
 
-    QPoint getPositionFromBoard() const { return position; }
-    void setPositionOnTheBoard(const QPoint& pos) { position = pos; }
-
-    //ракировка
+    //for castling
     bool hasMovedAlready() const { return hasMoved; }
     void markAsMoved() { hasMoved = true; }
 
@@ -33,22 +33,18 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
-
     QPoint toBoardCoord(QPointF scenePos);
 
 private:
+    static ChessPiece* selectedPiece;
+    QList<QPoint> cachedMoves;
+    QPointF dragStartPos;
+    QPoint position;
     PieceType type;
     Color color;
     QString svgPath;
-
-    QPointF dragStartPos;
-    QPoint position;
-
-    QList<QPoint> cachedMoves;
-    bool hasMoved = false;
-
     Board *board;
-    static ChessPiece* selectedPiece;
+    bool hasMoved = false;
 };
 
 #endif // PIECE_H

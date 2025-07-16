@@ -4,6 +4,7 @@
 #include "board.h"
 #include "chessclock.h"
 #include "stockfishengine.h"
+#include "sound.h"
 
 #include <QProcess>
 #include <QLayout>
@@ -24,9 +25,12 @@ MainWindow::MainWindow(QWidget *parent)
     this->setMinimumHeight(MIN_HEIGHT);
     this->setFixedHeight(MIN_HEIGHT);   // // // //
 
+    board = Board::getInstance();
+
     QWidget *centralWidget = new QWidget(this);
     QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
 
+    Sound::instance().setupSounds();
     clock = new ChessClock(this);
     clock->reset(5 * 60);  // 5 минут
 
@@ -77,7 +81,6 @@ MainWindow::MainWindow(QWidget *parent)
     int viewSize = boardSize + 2 * graphicsView->frameWidth();
     graphicsView->setFixedSize(viewSize, viewSize);
 
-    Board *board = Board::getInstance();
     board->setScene(scene);
     board->setupInitialPosition();
     board->setClock(clock);
@@ -146,7 +149,7 @@ void MainWindow::onNewGameClicked()
 
     whiteGraveScene->clear();
     blackGraveScene->clear();
-    Board::getInstance()->resetBoard();      // You need to implement this
+    board->resetBoard();      // You need to implement this
     historyWidget->setRowCount(0);           // Clear move history
     clock->reset(5 * 60);
 }

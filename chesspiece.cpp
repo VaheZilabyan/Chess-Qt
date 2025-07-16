@@ -1,6 +1,7 @@
 #include "promotiondialog.h"
 #include "chesspiece.h"
 #include "board.h"
+#include "sound.h"
 
 #include <QDebug>
 #include <QPixmap>
@@ -8,8 +9,6 @@
 #include <QSvgRenderer>
 #include <QFile>
 #include <QMessageBox>
-
-#include <QSoundEffect>
 
 ChessPiece* ChessPiece::selectedPiece = nullptr;
 
@@ -74,7 +73,7 @@ void ChessPiece::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (selectedPiece == this) {
         setSelectedState(false);
         selectedPiece = nullptr;
-        Board::getInstance()->clearHints();
+        board->clearHints();
     } else {
         setSelectedState(true);
         selectedPiece = this;
@@ -106,7 +105,7 @@ void ChessPiece::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
     setPos(clampedX, clampedY);
     dragStartPos = event->scenePos();
-    Board::getInstance()->showHints(cachedMoves );
+    board->showHints(cachedMoves );
     setSelectedState(true);
 
     QGraphicsSvgItem::mouseMoveEvent(event);
@@ -155,14 +154,14 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
                     //board->movePieceFromTo(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
                 }
             }
-            board->playCastleSound();
+            Sound::instance().playCastleSound();
             soundPlayed = true;
         }
 
         // Попытка захвата вражеской фигуры
         if (board->isEnemy(x, y, this->getColor())) {
             board->capturePiece(x, y);  // 👈 Удаляет и заносит в список убитых
-            board->playCaptureSound();
+            Sound::instance().playCaptureSound();
             soundPlayed = true;
         }
 
@@ -171,7 +170,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             int dy = (getColor() == ChessPiece::White) ? 1 : -1;
             QPoint enemyPos(newBoardPos.x(), newBoardPos.y() + dy);
             board->capturePiece(enemyPos.x(), enemyPos.y());
-            board->playCaptureSound();
+            Sound::instance().playCaptureSound();
             soundPlayed = true;
         }
 
@@ -186,7 +185,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
                     ChessPiece::PieceType promotedType = dialog.getSelectedPieceType();
                     qDebug() << "pawn become to " << promotedType;
                     promoted = board->pawnPromotion(promotedType, color);
-                    board->playPromoteSound();
+                    Sound::instance().playPromoteSound();
                     soundPlayed = true;
                 }
             }
@@ -206,25 +205,25 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         ChessPiece::Color opponentColor = (getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
         if (board->isKingInCheck(opponentColor)) {
             qDebug() << "Шах!";
-            if (!soundPlayed) board->playCheckSound();
+            if (!soundPlayed) Sound::instance().playCheckSound();
             soundPlayed = true;
         }
         if (board->isCheckmate(opponentColor)) {
             qDebug() << "♚♛ МАТ!";
             QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
-            if (!soundPlayed) board->playCheckSound();
+            if (!soundPlayed) Sound::instance().playCheckSound();
             soundPlayed = true;
         } else if (board->isStalemate(opponentColor)) {
             qDebug() << "🤝 ПАТ!";
             QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
-            if (!soundPlayed) board->playDrawSound();
+            if (!soundPlayed) Sound::instance().playDrawSound();
             soundPlayed = true;
         }
 
         //need to add in historyMove
         board->addMoveHistory(currentPiece, oldBoardPos, newBoardPos);
 
-        if (!soundPlayed) board->playMoveSound();
+        if (!soundPlayed) Sound::instance().playMoveSound();
 
         QString fromX = QString(QChar(97 + oldBoardPos.x()));
         QString fromY = QString::number(8 - oldBoardPos.y());

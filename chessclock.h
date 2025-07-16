@@ -1,6 +1,8 @@
 #ifndef CHESSCLOCK_H
 #define CHESSCLOCK_H
 
+#include "sound.h"
+
 #include <QWidget>
 #include <QLCDNumber>
 #include <QTimer>
