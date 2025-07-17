@@ -4,7 +4,6 @@
 #include "chesspiece.h"
 #include "chessclock.h"
 #include "board.h"
-#include "gamelogic.h"
 
 #include <QMainWindow>
 #include <QGraphicsView>
@@ -25,6 +24,8 @@ private slots:
     void onNewGameClicked();
     void onChangeBoardClicked();
     void timeOverSlot(const QString &player);
+    void checkMateSlot();
+    void vsComputerClicked();
 
 private:
     QString getPieceNameStr(ChessPiece*);
@@ -33,7 +34,6 @@ private:
     static constexpr int MIN_HEIGHT = 600;
 
     Board *board;
-
     QGraphicsScene *scene;
     QGraphicsView *whiteGraveView;
     QGraphicsView *blackGraveView;
@@ -41,5 +41,6 @@ private:
     QGraphicsScene* blackGraveScene;
     QTableWidget *historyWidget;
     ChessClock *clock;
+    StockfishEngine *engine;
 };
 #endif // MAINWINDOW_H

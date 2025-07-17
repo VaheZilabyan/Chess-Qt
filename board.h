@@ -13,8 +13,8 @@ class Board : public QObject {
     Q_OBJECT
     explicit Board(QObject* parent = nullptr) : QObject(parent) {
         // private constructor
-        engine = new StockfishEngine(this);
-        connect(engine, &StockfishEngine::bestMoveReceived, this, &Board::onBestMoveReceived);
+        //engine = new StockfishEngine(this);
+        //connect(engine, &StockfishEngine::bestMoveReceived, this, &Board::onBestMoveReceived);
     }
 
 public slots:
@@ -44,6 +44,8 @@ public:
 
     void showHints(const QList<QPoint>& moves);
     void clearHints();
+    void highlightAfterCheck(ChessPiece::Color);
+    QGraphicsRectItem* getHighlight() const {return highlight; }
 
     bool isEmpty(int x, int y) const;    //del
     bool isEnemy(int, int, ChessPiece::Color) const;    //del
@@ -78,6 +80,9 @@ public:
 
     void setEngine(StockfishEngine *e) { engine = e; }
     StockfishEngine* getEngine() const { return engine; }
+    void setVSComputer(bool vsSt) { vsStockfish = vsSt; }
+    bool isAgainstComputer() const { return vsStockfish; }
+
     QStringList moveHistory;
 
 private: //helper methods
@@ -93,13 +98,16 @@ private:
     QPoint enPassantTarget = {-1, -1};
     QPoint whiteKingPos = {4, 7};
     QPoint blackKingPos = {4, 0};
+    bool vsStockfish = false;
 
+    QGraphicsRectItem *highlight;
     QPair<QColor, QColor> boardColor = {Qt::white, Qt::gray};
     ChessClock *clock;
 
 signals:
     void pieceCaptured(ChessPiece* piece);  // фигура, которую убили
     void addMoveSignal(ChessPiece* piece, QPoint from, QPoint to);
+    void checkmateSignal();
 };
 
 #endif // BOARD_H

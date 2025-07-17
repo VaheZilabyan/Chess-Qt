@@ -708,4 +708,24 @@ void Board::onBestMoveReceived(const QString& move) {
     switchTurn();
 }
 
+void Board::highlightAfterCheck(ChessPiece::Color enemyColor)
+{
+    QPoint kingPos = (enemyColor == ChessPiece::Color::White) ? whiteKingPos : blackKingPos;
+
+    // Создаем красный прямоугольник поверх клетки
+    highlight = new QGraphicsRectItem(
+        kingPos.x() * tileSize, kingPos.y() * tileSize,
+        tileSize, tileSize
+        );
+    highlight->setBrush(Qt::red);
+    highlight->setOpacity(0.5);
+    scene->addItem(highlight);
+
+    // Удаляем подсветку через 2 секунды
+    QTimer::singleShot(2000, [=]() {
+        scene->removeItem(highlight);
+        delete highlight;
+        highlight = nullptr;
+    });
+}
 

@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->setFixedHeight(MIN_HEIGHT);   // // // //
 
     board = Board::getInstance();
+    engine = new StockfishEngine(this);
 
     QWidget *centralWidget = new QWidget(this);
     QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
@@ -46,6 +47,9 @@ MainWindow::MainWindow(QWidget *parent)
     blackGraveView  = new QGraphicsView(this);
     whiteGraveScene = new QGraphicsScene(this);
     blackGraveScene = new QGraphicsScene(this);
+
+    blackGraveView->setDisabled(true);
+    whiteGraveView->setDisabled(true);
 
     whiteGraveView->setScene(whiteGraveScene);
     whiteGraveView->setFixedHeight(80);
@@ -84,22 +88,28 @@ MainWindow::MainWindow(QWidget *parent)
     board->setScene(scene);
     board->setupInitialPosition();
     board->setClock(clock);
+    board->setEngine(engine);
 
     setCentralWidget(centralWidget);
 
     QMenu* playMenu = menuBar()->addMenu("Play");
     QMenu* settingsMenu = menuBar()->addMenu("Settings");
     QAction* newGameAction = new QAction("New Game", this);
+    QAction* vsComputerAction = new QAction("vs Computer", this);
     QAction* settingsAction = new QAction("Edit...", this);
     playMenu->addAction(newGameAction);
+    playMenu->addAction(vsComputerAction);
     settingsMenu->addAction(settingsAction);
 
     connect(newGameAction, &QAction::triggered, this, &MainWindow::onNewGameClicked);
+    connect(vsComputerAction, &QAction::triggered, this, &MainWindow::vsComputerClicked);
     connect(settingsAction, &QAction::triggered, this, &MainWindow::onChangeBoardClicked);
 
     connect(board, &Board::pieceCaptured, this, &MainWindow::onPieceCaptured);
     connect(board, &Board::addMoveSignal, this, &MainWindow::onAddMove);
+    connect(board, &Board::checkmateSignal, this, &MainWindow::checkMateSlot);
     connect(clock, &ChessClock::timeOut, this, &MainWindow::timeOverSlot);
+    connect(engine, &StockfishEngine::bestMoveReceived, board, &Board::onBestMoveReceived);
 }
 
 MainWindow::~MainWindow() {}
@@ -147,10 +157,12 @@ void MainWindow::onNewGameClicked()
     // Reset board, clear move history, etc.
     qDebug() << "Starting new game...";
 
+    board->setVSComputer(false);
+    board->clearHints();
     whiteGraveScene->clear();
     blackGraveScene->clear();
-    board->resetBoard();      // You need to implement this
-    historyWidget->setRowCount(0);           // Clear move history
+    board->resetBoard();
+    historyWidget->setRowCount(0);
     clock->reset(5 * 60);
 }
 
@@ -165,6 +177,27 @@ void MainWindow::timeOverSlot(const QString& player)
     QString winner = (player == "White") ? "Black" : "White";
     QMessageBox::information(this, "Time Over", winner + " wins by timeout!");
     onNewGameClicked();
+}
+
+void MainWindow::checkMateSlot()
+{
+    //onNewGameClicked();
+}
+
+void MainWindow::vsComputerClicked()
+{
+    // Reset board, clear move history, etc.
+    qDebug() << "Starting new game against computer...";
+
+    engine->sendCommand("ucinewgame\n");
+    //engine->sendCommand("position startpos\n");
+    board->clearHints();
+    whiteGraveScene->clear();
+    blackGraveScene->clear();
+    board->resetBoard();
+    board->setVSComputer(true);
+    historyWidget->setRowCount(0);
+    clock->reset(5 * 60);
 }
 
 QString MainWindow::getPieceNameStr(ChessPiece *piece)

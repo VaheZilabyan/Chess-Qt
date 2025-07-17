@@ -128,6 +128,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     QPoint newBoardPos(x, y);
 
     bool moveAllowed = false;
+    bool gameOver = false;
     bool soundPlayed = false;
     ChessPiece *promoted = nullptr;
 
@@ -138,7 +139,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             int row = (getColor() == ChessPiece::White) ? 7 : 0;
 
             // КОРОТКАЯ
-            if (newBoardPos == QPoint(6, row)) {
+            if (newBoardPos == QPoint(6, row) && !hasMovedAlready()) {
                 ChessPiece* rook = board->pieceAt(7, row);
                 if (rook) {
                     board->movePiece(rook, 5, row); // h1 → f1
@@ -147,7 +148,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             }
 
             // ДЛИННАЯ
-            if (newBoardPos == QPoint(2, row)) {
+            if (newBoardPos == QPoint(2, row) && !hasMovedAlready()) {
                 ChessPiece* rook = board->pieceAt(0, row);
                 if (rook) {
                     board->movePiece(rook, 3, row); // a1 → d1
@@ -205,6 +206,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         ChessPiece::Color opponentColor = (getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
         if (board->isKingInCheck(opponentColor)) {
             qDebug() << "Шах!";
+            board->highlightAfterCheck(opponentColor);
             if (!soundPlayed) Sound::instance().playCheckSound();
             soundPlayed = true;
         }
@@ -213,6 +215,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
             QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
             if (!soundPlayed) Sound::instance().playCheckSound();
             soundPlayed = true;
+            gameOver = true;
         } else if (board->isStalemate(opponentColor)) {
             qDebug() << "🤝 ПАТ!";
             QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
@@ -238,7 +241,7 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         // Отправляем движку всю историю
         QString moves = board->moveHistory.join(" ");
         board->getEngine()->sendCommand("position startpos moves " + moves);
-        //board->getEngine()->sendCommand("go movetime 2000");
+        if (board->isAgainstComputer()) board->getEngine()->sendCommand("go movetime 2000");
 
 
         //stockfish->write(QString("position startpos moves %1\n").arg(move).toUtf8());
