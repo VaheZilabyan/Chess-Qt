@@ -15,6 +15,7 @@ public slots:
     void accept();
 private:
     QComboBox *boardComboBox;
+    QComboBox *stockfishLevel;
     QCheckBox *soundCheckBox;
     QTimeEdit *timeEdit;
 };

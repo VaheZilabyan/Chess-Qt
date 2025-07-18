@@ -35,7 +35,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     pieceLayout->addWidget(changePieceLabel);
     pieceLayout->addWidget(pieceComboBox);
 
-    //timer
+    // Timer
     timeEdit = new QTimeEdit(this);
     QLabel *timerLabel = new QLabel("Change Timer");
     timeEdit->setDisplayFormat("mm:ss");
@@ -43,6 +43,19 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     QHBoxLayout *timerLayout = new QHBoxLayout;
     timerLayout->addWidget(timerLabel);
     timerLayout->addWidget(timeEdit);
+
+    // Stockfish difficulty level
+    QLabel *stockfishLabel = new QLabel("Choose difficulty level");
+    stockfishLevel = new QComboBox();
+    QStringList items;
+    for (int i = 1; i <= 20; ++i) {
+        items.append(QString::number(i));
+    }
+    stockfishLevel->addItems(items);
+    stockfishLevel->setCurrentIndex(9);
+    QHBoxLayout *difficultLayout = new QHBoxLayout;
+    difficultLayout->addWidget(stockfishLabel);
+    difficultLayout->addWidget(stockfishLevel);
 
     // On/Off sound
     soundCheckBox = new QCheckBox("Sound");
@@ -57,6 +70,7 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     mainLayout->addLayout(boardLayout);
     mainLayout->addLayout(pieceLayout);
     mainLayout->addLayout(timerLayout);
+    mainLayout->addLayout(difficultLayout);
     mainLayout->addWidget(soundCheckBox);
     mainLayout->addWidget(buttonBox);
 
@@ -84,6 +98,9 @@ void SettingsWindow::accept()
     QTime selectedTime = timeEdit->time();
     int totalSeconds = QTime(0, 0).secsTo(selectedTime);
     Board::getInstance()->getClock()->reset(totalSeconds);
+
+    QString diffLevel = stockfishLevel->currentText();
+    Board::getInstance()->setDifficultyLevel(diffLevel);
 
     qDebug() << "acceped";
 }

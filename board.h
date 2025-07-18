@@ -12,9 +12,6 @@
 class Board : public QObject {
     Q_OBJECT
     explicit Board(QObject* parent = nullptr) : QObject(parent) {
-        // private constructor
-        //engine = new StockfishEngine(this);
-        //connect(engine, &StockfishEngine::bestMoveReceived, this, &Board::onBestMoveReceived);
     }
 
 public slots:
@@ -78,6 +75,7 @@ public:
     void setClock(ChessClock* clock) { this->clock = clock; }
     ChessClock* getClock() const { return clock; }
 
+    void setDifficultyLevel(QString level) { engine->sendCommand("setoption name Skill Level value " + level + "\n"); }
     void setEngine(StockfishEngine *e) { engine = e; }
     StockfishEngine* getEngine() const { return engine; }
     void setVSComputer(bool vsSt) { vsStockfish = vsSt; }

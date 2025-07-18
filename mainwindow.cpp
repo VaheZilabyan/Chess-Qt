@@ -25,8 +25,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->setMinimumHeight(MIN_HEIGHT);
     this->setFixedHeight(MIN_HEIGHT);   // // // //
 
-    board = Board::getInstance();
     engine = new StockfishEngine(this);
+    board = Board::getInstance();
 
     QWidget *centralWidget = new QWidget(this);
     QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
