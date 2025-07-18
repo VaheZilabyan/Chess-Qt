@@ -228,24 +228,22 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 
         if (!soundPlayed) Sound::instance().playMoveSound();
 
-        QString fromX = QString(QChar(97 + oldBoardPos.x()));
-        QString fromY = QString::number(8 - oldBoardPos.y());
-        QString toX = QString(QChar(97 + newBoardPos.x()));
-        QString toY = QString::number(8 - newBoardPos.y());
-        QString moveNotation = fromX + fromY + toX + toY;
-        qDebug() << "Move notation = " << moveNotation;
-
+        // Stockfish Engine
         // Добавляем в историю
-        board->moveHistory.append(moveNotation);
+        if (board->isAgainstComputer()) {
+            QString fromX = QString(QChar(97 + oldBoardPos.x()));
+            QString fromY = QString::number(8 - oldBoardPos.y());
+            QString toX = QString(QChar(97 + newBoardPos.x()));
+            QString toY = QString::number(8 - newBoardPos.y());
+            QString moveNotation = fromX + fromY + toX + toY;
+            qDebug() << "Move notation = " << moveNotation;
 
-        // Отправляем движку всю историю
-        QString moves = board->moveHistory.join(" ");
-        board->getEngine()->sendCommand("position startpos moves " + moves);
-        if (board->isAgainstComputer()) board->getEngine()->sendCommand("go movetime 2000");
-
-
-        //stockfish->write(QString("position startpos moves %1\n").arg(move).toUtf8());
-        //stockfish->write("go depth 18\n");  // Анализ на глубину 18 полуходов
+            board->moveHistory.append(moveNotation);
+            // Отправляем движку всю историю
+            QString moves = board->moveHistory.join(" ");
+            board->getEngine()->sendCommand("position startpos moves " + moves);
+            board->getEngine()->sendCommand("go movetime 2000");
+        }
 
         Board::getInstance()->switchTurn();
     } else {

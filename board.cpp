@@ -66,6 +66,7 @@ void Board::resetBoard()    //calls for new game
 
     clearHints();
     setupInitialPosition();
+    moveHistory.clear();
 
     qDebug() << "Board reset completed.";
 }
@@ -660,7 +661,7 @@ void Board::onBestMoveReceived(const QString& move) {
     }
 
     // Переместить фигуру
-    pieces[fromX][fromY] = nullptr;
+    pieces[fromY][fromX] = nullptr;
     movePiece(piece, toX, toY);
     piece->setPositionOnTheBoard(to);
     piece->setPos(toX * tileSize, toY * tileSize);
@@ -674,7 +675,7 @@ void Board::onBestMoveReceived(const QString& move) {
             int rookY = fromY;
             ChessPiece* rook = pieceAt(rookFromX, rookY);
             if (rook) {
-                pieces[rookFromX][rookY] = nullptr;
+                pieces[rookY][rookFromX] = nullptr;
                 movePiece(rook, rookToX, rookY);
                 rook->setPositionOnTheBoard(QPoint(rookToX, rookY));
                 rook->setPos(rookToX * tileSize, rookY * tileSize);
@@ -688,7 +689,7 @@ void Board::onBestMoveReceived(const QString& move) {
             int rookY = fromY;
             ChessPiece* rook = pieceAt(rookFromX, rookY);
             if (rook) {
-                pieces[rookFromX][rookY] = nullptr;
+                pieces[rookY][rookFromX] = nullptr;
                 movePiece(rook, rookToX, rookY);
                 rook->setPositionOnTheBoard(QPoint(rookToX, rookY));
                 rook->setPos(rookToX * tileSize, rookY * tileSize);
@@ -697,13 +698,14 @@ void Board::onBestMoveReceived(const QString& move) {
         }
     }
 
-    // Добавляем ход Stockfish в историю
-    moveHistory.append(move);
-
-    // Отправляем обновлённую позицию обратно движку
-    QString moves = moveHistory.join(" ");
-    engine->sendCommand("position startpos moves " + moves);
-    //engine->sendCommand("go movetime 2000");
+    if (isAgainstComputer()) {
+        // Добавляем ход Stockfish в историюif (board->isAgainstComputer()) {
+        moveHistory.append(move);
+        // Отправляем обновлённую позицию обратно движку
+        QString moves = moveHistory.join(" ");
+        engine->sendCommand("position startpos moves " + moves);
+        //engine->sendCommand("go movetime 2000");  //moves for white
+    }
 
     switchTurn();
 }
