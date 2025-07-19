@@ -50,6 +50,7 @@ public:
     void capturePiece(int x, int y);
     void movePieceFromTo(ChessPiece* piece, QPoint from, QPoint to);
     void movePiece(ChessPiece *piece, int x, int y);
+    void makeMove(ChessPiece* piece, QPoint oldBoardPos, QPoint to, bool isFromPlayer);
 
     void setScene(QGraphicsScene *s) { this->scene = s; }
     QGraphicsScene* getScene() const { return scene; }

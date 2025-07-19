@@ -18,6 +18,7 @@ private:
     QComboBox *stockfishLevel;
     QCheckBox *soundCheckBox;
     QTimeEdit *timeEdit;
+    bool timeChanged = false;
 };
 
 

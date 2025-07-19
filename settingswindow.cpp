@@ -75,6 +75,10 @@ SettingsWindow::SettingsWindow(QWidget *parent)
     mainLayout->addWidget(buttonBox);
 
     setLayout(mainLayout);
+
+    connect(timeEdit, &QTimeEdit::timeChanged, this, [=](const QTime &){
+        timeChanged = true;
+    });
 }
 
 void SettingsWindow::accept()
@@ -97,7 +101,10 @@ void SettingsWindow::accept()
 
     QTime selectedTime = timeEdit->time();
     int totalSeconds = QTime(0, 0).secsTo(selectedTime);
-    Board::getInstance()->getClock()->reset(totalSeconds);
+    if (timeChanged) {
+        Board::getInstance()->getClock()->reset(totalSeconds);
+        timeChanged = false;
+    }
 
     QString diffLevel = stockfishLevel->currentText();
     Board::getInstance()->setDifficultyLevel(diffLevel);

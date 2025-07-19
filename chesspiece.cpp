@@ -10,6 +10,9 @@
 #include <QFile>
 #include <QMessageBox>
 
+// need to move sounds ant other methods from mouseReleaseEven to movePiece or other method
+// because after stockfish moves we doesnt see highlights or sounds effects
+
 ChessPiece* ChessPiece::selectedPiece = nullptr;
 
 ChessPiece::ChessPiece(PieceType type, Color color, const QString& svgPath)
@@ -127,125 +130,10 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     int y = std::clamp(newPosInScene.y() / Board::tileSize, 0, 7);
     QPoint newBoardPos(x, y);
 
-    bool moveAllowed = false;
-    bool gameOver = false;
-    bool soundPlayed = false;
-    ChessPiece *promoted = nullptr;
-
     if (cachedMoves.contains(newBoardPos)) {
         //qDebug() << "Move is allowed";
-        //ракировка
-        if (type == ChessPiece::King) {
-            int row = (getColor() == ChessPiece::White) ? 7 : 0;
+        board->makeMove(this, oldBoardPos, newBoardPos, true); //true - player
 
-            // КОРОТКАЯ
-            if (newBoardPos == QPoint(6, row) && !hasMovedAlready()) {
-                ChessPiece* rook = board->pieceAt(7, row);
-                if (rook) {
-                    board->movePiece(rook, 5, row); // h1 → f1
-                    //board->movePieceFromTo(rook, oldBoardPos, QPoint(5, row)); // h1 → f1
-                }
-            }
-
-            // ДЛИННАЯ
-            if (newBoardPos == QPoint(2, row) && !hasMovedAlready()) {
-                ChessPiece* rook = board->pieceAt(0, row);
-                if (rook) {
-                    board->movePiece(rook, 3, row); // a1 → d1
-                    //board->movePieceFromTo(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
-                }
-            }
-            Sound::instance().playCastleSound();
-            soundPlayed = true;
-        }
-
-        // Попытка захвата вражеской фигуры
-        if (board->isEnemy(x, y, this->getColor())) {
-            board->capturePiece(x, y);  // 👈 Удаляет и заносит в список убитых
-            Sound::instance().playCaptureSound();
-            soundPlayed = true;
-        }
-
-        // En Passant - взятие на проходе
-        if (type == PieceType::Pawn && newBoardPos == board->getEnPassantTarget()) {
-            int dy = (getColor() == ChessPiece::White) ? 1 : -1;
-            QPoint enemyPos(newBoardPos.x(), newBoardPos.y() + dy);
-            board->capturePiece(enemyPos.x(), enemyPos.y());
-            Sound::instance().playCaptureSound();
-            soundPlayed = true;
-        }
-
-        // Pawn Promotion
-        if (type == PieceType::Pawn) {
-            int finalRank = (getColor() == ChessPiece::White) ? 0 : 7;
-            if (newBoardPos.y() == finalRank) {
-                qDebug() << "become Queen";
-                Color color = getColor();
-                PromotionDialog dialog(color);
-                if (dialog.exec() == QDialog::Accepted) {
-                    ChessPiece::PieceType promotedType = dialog.getSelectedPieceType();
-                    qDebug() << "pawn become to " << promotedType;
-                    promoted = board->pawnPromotion(promotedType, color);
-                    Sound::instance().playPromoteSound();
-                    soundPlayed = true;
-                }
-            }
-        }
-
-        ChessPiece *currentPiece = (promoted == nullptr) ? this : promoted;
-        board->movePieceFromTo(currentPiece, oldBoardPos, newBoardPos);
-        //newPiece->setPos(x * Board::tileSize, y * Board::tileSize);
-
-        // Удаляем старую пешку, если промоция
-        if (promoted != nullptr) {
-            this->deleteLater();  // безопасное удаление в Qt
-        }
-
-        moveAllowed = true;
-
-        ChessPiece::Color opponentColor = (getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
-        if (board->isKingInCheck(opponentColor)) {
-            qDebug() << "Шах!";
-            board->highlightAfterCheck(opponentColor);
-            if (!soundPlayed) Sound::instance().playCheckSound();
-            soundPlayed = true;
-        }
-        if (board->isCheckmate(opponentColor)) {
-            qDebug() << "♚♛ МАТ!";
-            QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
-            if (!soundPlayed) Sound::instance().playCheckSound();
-            soundPlayed = true;
-            gameOver = true;
-        } else if (board->isStalemate(opponentColor)) {
-            qDebug() << "🤝 ПАТ!";
-            QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
-            if (!soundPlayed) Sound::instance().playDrawSound();
-            soundPlayed = true;
-        }
-
-        //need to add in historyMove
-        board->addMoveHistory(currentPiece, oldBoardPos, newBoardPos);
-
-        if (!soundPlayed) Sound::instance().playMoveSound();
-
-        // Stockfish Engine
-        // Добавляем в историю
-        if (board->isAgainstComputer()) {
-            QString fromX = QString(QChar(97 + oldBoardPos.x()));
-            QString fromY = QString::number(8 - oldBoardPos.y());
-            QString toX = QString(QChar(97 + newBoardPos.x()));
-            QString toY = QString::number(8 - newBoardPos.y());
-            QString moveNotation = fromX + fromY + toX + toY;
-            qDebug() << "Move notation = " << moveNotation;
-
-            board->moveHistory.append(moveNotation);
-            // Отправляем движку всю историю
-            QString moves = board->moveHistory.join(" ");
-            board->getEngine()->sendCommand("position startpos moves " + moves);
-            board->getEngine()->sendCommand("go movetime 2000");
-        }
-
-        Board::getInstance()->switchTurn();
     } else {
         //qDebug() << "Move not allowed, snapping back";
         // Возврат в старую позицию
@@ -253,17 +141,6 @@ void ChessPiece::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
         setPos(oldBoardPos.x() * Board::tileSize, oldBoardPos.y() * Board::tileSize);
     }
 
-
-    setZValue(1);
-    cachedMoves.clear();
-    setSelectedState(false);
-    if (promoted) {
-        promoted->setSelectedState(false);
-        selectedPiece = promoted;
-    }
-    if (moveAllowed) {
-        board->clearHints();
-    }
 
     QGraphicsSvgItem::mouseReleaseEvent(event);
 }

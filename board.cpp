@@ -1,5 +1,8 @@
 #include "board.h"
 #include "sound.h"
+#include "promotiondialog.h"
+
+#include <QMessageBox>
 
 /*Board* getInstance(QObject* parent = nullptr) {
     static Board instance(parent);
@@ -654,7 +657,9 @@ void Board::onBestMoveReceived(const QString& move) {
         qWarning() << "❌ Stockfish ссылается на пустую клетку:" << from;
         return;
     }
+    makeMove(piece, from, to, false);
 
+/*
     // Захват фигуры
     if (isEnemy(toX, toY, piece->getColor())) {
         capturePiece(toX, toY);
@@ -707,7 +712,7 @@ void Board::onBestMoveReceived(const QString& move) {
         //engine->sendCommand("go movetime 2000");  //moves for white
     }
 
-    switchTurn();
+    switchTurn();*/
 }
 
 void Board::highlightAfterCheck(ChessPiece::Color enemyColor)
@@ -724,10 +729,156 @@ void Board::highlightAfterCheck(ChessPiece::Color enemyColor)
     scene->addItem(highlight);
 
     // Удаляем подсветку через 2 секунды
-    QTimer::singleShot(2000, [=]() {
+    QTimer::singleShot(1000, [=]() {
         scene->removeItem(highlight);
         delete highlight;
         highlight = nullptr;
     });
+}
+
+void Board::makeMove(ChessPiece* piece, QPoint oldBoardPos, QPoint newBoardPos, bool isFromPlayer) {
+    bool moveAllowed = false;
+    bool soundPlayed = false;
+    ChessPiece *promoted = nullptr;
+
+    //ракировка
+    if (piece->getType() == ChessPiece::King) {
+        int row = (piece->getColor() == ChessPiece::White) ? 7 : 0;
+
+        // КОРОТКАЯ
+        if (newBoardPos == QPoint(6, row) && !piece->hasMovedAlready()) {
+            ChessPiece* rook = pieceAt(7, row);
+            if (rook) {
+                movePiece(rook, 5, row); // h1 → f1
+                //movePieceFromTo(rook, oldBoardPos, QPoint(5, row)); // h1 → f1
+            }
+        }
+
+        // ДЛИННАЯ
+        if (newBoardPos == QPoint(2, row) && !piece->hasMovedAlready()) {
+            ChessPiece* rook = pieceAt(0, row);
+            if (rook) {
+                movePiece(rook, 3, row); // a1 → d1
+                //movePieceFromTo(rook, oldBoardPos, QPoint(3, row)); // a1 → d1
+            }
+        }
+        Sound::instance().playCastleSound();
+        soundPlayed = true;
+    }
+
+    // Попытка захвата вражеской фигуры
+    if (isEnemy(newBoardPos.x(), newBoardPos.y(), piece->getColor())) {
+        capturePiece(newBoardPos.x(), newBoardPos.y());  // 👈 Удаляет и заносит в список убитых
+        Sound::instance().playCaptureSound();
+        soundPlayed = true;
+    }
+
+    // En Passant - взятие на проходе
+    if (piece->getType() == ChessPiece::PieceType::Pawn && newBoardPos == getEnPassantTarget()) {
+        int dy = (piece->getColor() == ChessPiece::Color::White) ? 1 : -1;
+        QPoint enemyPos(newBoardPos.x(), newBoardPos.y() + dy);
+        capturePiece(enemyPos.x(), enemyPos.y());
+        Sound::instance().playCaptureSound();
+        soundPlayed = true;
+    }
+
+    // Pawn Promotion
+    bool isPromotion  = false;
+    if (piece->getType() == ChessPiece::PieceType::Pawn) {
+        int finalRank = (piece->getColor() == ChessPiece::Color::White) ? 0 : 7;
+        if (newBoardPos.y() == finalRank) {
+            qDebug() << "become Queen";
+            ChessPiece::Color color = piece->getColor();
+            if (isFromPlayer) {
+                PromotionDialog dialog(color);
+                if (dialog.exec() == QDialog::Accepted) {
+                    ChessPiece::PieceType promotedType = dialog.getSelectedPieceType();
+                    qDebug() << "pawn become to " << promotedType;
+                    promoted = pawnPromotion(promotedType, color);
+                    Sound::instance().playPromoteSound();
+                    soundPlayed = true;
+                    isPromotion  = true;
+                }
+            } else {    //stockfish
+                promoted = new ChessPiece(ChessPiece::PieceType::Queen, ChessPiece::Color::Black, ":/svg_files/img/queen-b.svg");
+                promoted->setScale(tileSize / 128.0);
+                scene->addItem(promoted);
+                soundPlayed = true;
+                isPromotion  = true;
+            }
+        }
+    }
+
+    ChessPiece *currentPiece = (promoted == nullptr) ? piece : promoted;
+    movePieceFromTo(currentPiece, oldBoardPos, newBoardPos);
+    //newPiece->setPos(x * Board::tileSize, y * Board::tileSize);
+
+    // Удаляем старую пешку, если промоция
+    if (promoted != nullptr) {
+        piece->deleteLater();  // безопасное удаление в Qt
+    }
+
+    moveAllowed = true;
+
+    ChessPiece::Color opponentColor = (piece->getColor() == ChessPiece::White) ? ChessPiece::Black : ChessPiece::White;
+    if (isKingInCheck(opponentColor)) {
+        qDebug() << "Шах!";
+        highlightAfterCheck(opponentColor);
+        if (!soundPlayed) Sound::instance().playCheckSound();
+        soundPlayed = true;
+    }
+    if (isCheckmate(opponentColor)) {
+        qDebug() << "♚♛ МАТ!";
+        QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
+        if (!soundPlayed) Sound::instance().playCheckSound();
+        soundPlayed = true;
+    } else if (isStalemate(opponentColor)) {
+        qDebug() << "🤝 ПАТ!";
+        QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
+        if (!soundPlayed) Sound::instance().playDrawSound();
+        soundPlayed = true;
+    }
+
+    //need to add in historyMove
+    addMoveHistory(currentPiece, oldBoardPos, newBoardPos);
+
+    if (!soundPlayed) Sound::instance().playMoveSound();
+
+    // Stockfish Engine
+    // Добавляем в историю
+    if (isAgainstComputer()) {
+        QString fromX = QString(QChar(97 + oldBoardPos.x()));
+        QString fromY = QString::number(8 - oldBoardPos.y());
+        QString toX = QString(QChar(97 + newBoardPos.x()));
+        QString toY = QString::number(8 - newBoardPos.y());
+        QString moveNotation = fromX + fromY + toX + toY;
+        qDebug() << "Move notation = " << moveNotation;
+
+        if (isPromotion ) {
+            moveNotation += "q";
+            isPromotion  = false;
+        }
+
+        moveHistory.append(moveNotation);
+        // Отправляем движку всю историю
+        QString moves = moveHistory.join(" ");
+        getEngine()->sendCommand("position startpos moves " + moves);
+        if (isFromPlayer) {
+            getEngine()->sendCommand("go movetime 2000");
+        }
+    }
+
+    switchTurn();
+
+    currentPiece->setZValue(1);
+    piece->getCachedMoves().clear();
+    piece->setSelectedState(false);
+    if (promoted) {
+        promoted->setSelectedState(false);
+        piece->setSelectedPiece(promoted);
+    }
+    if (moveAllowed) {
+        clearHints();
+    }
 }
 

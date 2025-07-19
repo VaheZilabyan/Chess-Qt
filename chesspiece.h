@@ -15,6 +15,7 @@ public:
 
     ChessPiece(PieceType type, Color color, const QString& svgPath);
 
+    QList<QPoint> getCachedMoves() const { return cachedMoves; }
     QPoint getPositionFromBoard() const { return position; }
     QString getSvgPath() const { return svgPath; }
     PieceType getType() const;
