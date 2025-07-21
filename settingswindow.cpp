@@ -107,6 +107,7 @@ void SettingsWindow::accept()
     }
 
     QString diffLevel = stockfishLevel->currentText();
+    qDebug() << "difflevel = " << diffLevel;
     Board::getInstance()->setDifficultyLevel(diffLevel);
 
     qDebug() << "acceped";

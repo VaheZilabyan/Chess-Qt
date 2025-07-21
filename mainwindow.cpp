@@ -5,6 +5,7 @@
 #include "chessclock.h"
 #include "stockfishengine.h"
 #include "sound.h"
+#include "promotiondialog.h"
 
 #include <QProcess>
 #include <QLayout>

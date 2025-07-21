@@ -636,6 +636,27 @@ void Board::setBoardColor(QPair<QColor, QColor> bc) {
     setupBoard();
 }
 
+void Board::highlightAfterCheck(ChessPiece::Color enemyColor)
+{
+    QPoint kingPos = (enemyColor == ChessPiece::Color::White) ? whiteKingPos : blackKingPos;
+
+    // Создаем красный прямоугольник поверх клетки
+    highlight = new QGraphicsRectItem(
+        kingPos.x() * tileSize, kingPos.y() * tileSize,
+        tileSize, tileSize
+        );
+    highlight->setBrush(Qt::red);
+    highlight->setOpacity(0.5);
+    scene->addItem(highlight);
+
+    // Удаляем подсветку через 2 секунды
+    QTimer::singleShot(1000, [=]() {
+        scene->removeItem(highlight);
+        delete highlight;
+        highlight = nullptr;
+    });
+}
+
 void Board::onBestMoveReceived(const QString& move) {
     qDebug() << "Stockfish move:" << move;
 
@@ -658,87 +679,12 @@ void Board::onBestMoveReceived(const QString& move) {
         return;
     }
     makeMove(piece, from, to, false);
-
-/*
-    // Захват фигуры
-    if (isEnemy(toX, toY, piece->getColor())) {
-        capturePiece(toX, toY);
-    }
-
-    // Переместить фигуру
-    pieces[fromY][fromX] = nullptr;
-    movePiece(piece, toX, toY);
-    piece->setPositionOnTheBoard(to);
-    piece->setPos(toX * tileSize, toY * tileSize);
-
-    // Проверка рокировки
-    if (piece->getType() == ChessPiece::PieceType::King && abs(toX - fromX) == 2) {
-        // Короткая рокировка (g1 или g8)
-        if (toX == 6) {
-            int rookFromX = 7;
-            int rookToX = 5;
-            int rookY = fromY;
-            ChessPiece* rook = pieceAt(rookFromX, rookY);
-            if (rook) {
-                pieces[rookY][rookFromX] = nullptr;
-                movePiece(rook, rookToX, rookY);
-                rook->setPositionOnTheBoard(QPoint(rookToX, rookY));
-                rook->setPos(rookToX * tileSize, rookY * tileSize);
-                qDebug() << "Короткая рокировка выполнена";
-            }
-        }
-        // Длинная рокировка (c1 или c8)
-        else if (toX == 2) {
-            int rookFromX = 0;
-            int rookToX = 3;
-            int rookY = fromY;
-            ChessPiece* rook = pieceAt(rookFromX, rookY);
-            if (rook) {
-                pieces[rookY][rookFromX] = nullptr;
-                movePiece(rook, rookToX, rookY);
-                rook->setPositionOnTheBoard(QPoint(rookToX, rookY));
-                rook->setPos(rookToX * tileSize, rookY * tileSize);
-                qDebug() << "Длинная рокировка выполнена";
-            }
-        }
-    }
-
-    if (isAgainstComputer()) {
-        // Добавляем ход Stockfish в историюif (board->isAgainstComputer()) {
-        moveHistory.append(move);
-        // Отправляем обновлённую позицию обратно движку
-        QString moves = moveHistory.join(" ");
-        engine->sendCommand("position startpos moves " + moves);
-        //engine->sendCommand("go movetime 2000");  //moves for white
-    }
-
-    switchTurn();*/
-}
-
-void Board::highlightAfterCheck(ChessPiece::Color enemyColor)
-{
-    QPoint kingPos = (enemyColor == ChessPiece::Color::White) ? whiteKingPos : blackKingPos;
-
-    // Создаем красный прямоугольник поверх клетки
-    highlight = new QGraphicsRectItem(
-        kingPos.x() * tileSize, kingPos.y() * tileSize,
-        tileSize, tileSize
-        );
-    highlight->setBrush(Qt::red);
-    highlight->setOpacity(0.5);
-    scene->addItem(highlight);
-
-    // Удаляем подсветку через 2 секунды
-    QTimer::singleShot(1000, [=]() {
-        scene->removeItem(highlight);
-        delete highlight;
-        highlight = nullptr;
-    });
 }
 
 void Board::makeMove(ChessPiece* piece, QPoint oldBoardPos, QPoint newBoardPos, bool isFromPlayer) {
     bool moveAllowed = false;
     bool soundPlayed = false;
+    bool gameOver = false;
     ChessPiece *promoted = nullptr;
 
     //ракировка
@@ -829,11 +775,14 @@ void Board::makeMove(ChessPiece* piece, QPoint oldBoardPos, QPoint newBoardPos, 
     }
     if (isCheckmate(opponentColor)) {
         qDebug() << "♚♛ МАТ!";
+        clock->stopAll();
         QMessageBox::information(nullptr, "Мат", QString(" мат ") + (opponentColor == ChessPiece::White ? "Белым!" : "Чёрным!"));
         if (!soundPlayed) Sound::instance().playCheckSound();
         soundPlayed = true;
+        gameOver = true;
     } else if (isStalemate(opponentColor)) {
         qDebug() << "🤝 ПАТ!";
+        clock->stopAll();
         QMessageBox::information(nullptr, "Пат", "Ничья: патовое положение!");
         if (!soundPlayed) Sound::instance().playDrawSound();
         soundPlayed = true;
@@ -854,7 +803,7 @@ void Board::makeMove(ChessPiece* piece, QPoint oldBoardPos, QPoint newBoardPos, 
         QString moveNotation = fromX + fromY + toX + toY;
         qDebug() << "Move notation = " << moveNotation;
 
-        if (isPromotion ) {
+        if (isPromotion) {
             moveNotation += "q";
             isPromotion  = false;
         }
@@ -868,7 +817,7 @@ void Board::makeMove(ChessPiece* piece, QPoint oldBoardPos, QPoint newBoardPos, 
         }
     }
 
-    switchTurn();
+    if (!gameOver) switchTurn();
 
     currentPiece->setZValue(1);
     piece->getCachedMoves().clear();

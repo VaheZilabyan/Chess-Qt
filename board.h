@@ -73,10 +73,15 @@ public:
     }
 
     void setBoardColor(QPair<QColor, QColor> bc);
-    void setClock(ChessClock* clock) { this->clock = clock; }
+    void setClock(ChessClock* clk) {
+        this->clock = clk;
+    }
     ChessClock* getClock() const { return clock; }
 
-    void setDifficultyLevel(QString level) { engine->sendCommand("setoption name Skill Level value " + level + "\n"); }
+    void setDifficultyLevel(QString level) {
+        engine->sendCommand("setoption name Skill Level value " + level + "\n");
+        qDebug() << "calloed Method setDifficultyLevel";
+    }
     void setEngine(StockfishEngine *e) { engine = e; }
     StockfishEngine* getEngine() const { return engine; }
     void setVSComputer(bool vsSt) { vsStockfish = vsSt; }

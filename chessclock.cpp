@@ -19,9 +19,7 @@ ChessClock::ChessClock(QWidget *parent)
     blackDisplay->display(formatTime(blackSeconds));
 
     QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->addWidget(new QLabel("♙ White"));
     layout->addWidget(whiteDisplay);
-    layout->addWidget(new QLabel("♟ Black"));
     layout->addWidget(blackDisplay);
     setLayout(layout);
 
@@ -64,6 +62,7 @@ void ChessClock::startBlack() {
 void ChessClock::stopAll() {
     whiteTimer->stop();
     blackTimer->stop();
+    qDebug() << "Timers stopped, white:" << whiteTimer->isActive() << " black:" << blackTimer->isActive();
 }
 
 void ChessClock::reset(int secondsPerSide) {
