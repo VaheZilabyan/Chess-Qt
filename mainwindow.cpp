@@ -6,6 +6,7 @@
 #include "stockfishengine.h"
 #include "sound.h"
 #include "promotiondialog.h"
+#include "colorselectiondialog.h"
 
 #include <QProcess>
 #include <QLayout>
@@ -163,6 +164,8 @@ void MainWindow::onNewGameClicked()
     whiteGraveScene->clear();
     blackGraveScene->clear();
     board->resetBoard();
+    board->setupInitialPosition();
+
     historyWidget->setRowCount(0);
     clock->reset(5 * 60);
 }
@@ -199,6 +202,7 @@ void MainWindow::vsComputerClicked()
     board->setVSComputer(true);
     historyWidget->setRowCount(0);
     clock->reset(5 * 60);
+    board->setupInitialPosition();
 }
 
 QString MainWindow::getPieceNameStr(ChessPiece *piece)

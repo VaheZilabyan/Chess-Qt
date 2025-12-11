@@ -55,8 +55,6 @@ public:
     void setScene(QGraphicsScene *s) { this->scene = s; }
     QGraphicsScene* getScene() const { return scene; }
 
-    ChessPiece::Color currentTurn = ChessPiece::White;
-
     bool isCorrectTurn(ChessPiece* piece) const;    //del
     void switchTurn();    //del
 
@@ -88,6 +86,7 @@ public:
     bool isAgainstComputer() const { return vsStockfish; }
 
     QStringList moveHistory;
+    ChessPiece::Color currentTurn = ChessPiece::White;
 
 private: //helper methods
     bool isInsideBoard(int x, int y) const { return x >= 0 && x < 8 && y >= 0 && y < 8; }

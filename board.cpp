@@ -68,7 +68,7 @@ void Board::resetBoard()    //calls for new game
     ChessPiece::setSelectedPiece(nullptr);
 
     clearHints();
-    setupInitialPosition();
+    //setupInitialPosition();
     moveHistory.clear();
 
     qDebug() << "Board reset completed.";
